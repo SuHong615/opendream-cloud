@@ -1,0 +1,500 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --oc-bg: #f8fafc;
+  --oc-surface: #ffffff;
+  --oc-surface-raised: #ffffff;
+  --oc-surface-hover: #f1f5f9;
+  --oc-border: #e2e8f0;
+  --oc-border-strong: #cbd5e1;
+  --oc-text: #0f172a;
+  --oc-text-secondary: #475569;
+  --oc-text-tertiary: #64748b;
+  --oc-primary: #2563eb;
+  --oc-primary-hover: #1d4ed8;
+  --oc-primary-subtle: #eff4ff;
+  --oc-success: #12b76a;
+  --oc-success-text: #027a48;
+  --oc-success-subtle: #ecfdf3;
+  --oc-warning: #f79009;
+  --oc-warning-text: #b54708;
+  --oc-warning-subtle: #fffaeb;
+  --oc-danger: #f04438;
+  --oc-danger-text: #b42318;
+  --oc-danger-subtle: #fef3f2;
+  --oc-info: #2e90fa;
+  --oc-info-text: #175cd3;
+  --oc-info-subtle: #eff8ff;
+  --oc-radius: 8px;
+  --oc-radius-lg: 12px;
+  --oc-shadow: 0 1px 3px rgba(15, 23, 42, 0.1), 0 1px 2px rgba(15, 23, 42, 0.06);
+  --oc-ring: 0 0 0 3px rgba(37, 99, 235, 0.28);
+}
+
+[data-theme="dark"] {
+  --oc-bg: #0b1220;
+  --oc-surface: #111a2b;
+  --oc-surface-raised: #16213a;
+  --oc-surface-hover: #1b2740;
+  --oc-border: #263449;
+  --oc-border-strong: #34465f;
+  --oc-text: #e6edf7;
+  --oc-text-secondary: #a9b7cc;
+  --oc-text-tertiary: #7e8da6;
+  --oc-primary: #3b82f6;
+  --oc-primary-hover: #2563eb;
+  --oc-primary-subtle: #16213a;
+  --oc-success: #32d583;
+  --oc-success-text: #75e0a7;
+  --oc-success-subtle: #0c2a1e;
+  --oc-warning: #fdb022;
+  --oc-warning-text: #fec84b;
+  --oc-warning-subtle: #2a1f0a;
+  --oc-danger: #f97066;
+  --oc-danger-text: #fda29b;
+  --oc-danger-subtle: #2d1210;
+  --oc-info: #53b1fd;
+  --oc-info-text: #84caff;
+  --oc-info-subtle: #0d1f33;
+  --oc-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  --oc-ring: 0 0 0 3px rgba(138, 180, 255, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  background: var(--oc-bg);
+  color: var(--oc-text);
+  font-family: "PingFang SC", "Microsoft YaHei", Inter, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+a {
+  color: var(--oc-primary);
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--oc-ring);
+}
+
+.oc-card {
+  background: var(--oc-surface);
+  border: 1px solid var(--oc-border);
+  border-radius: var(--oc-radius-lg);
+  box-shadow: var(--oc-shadow);
+}
+
+.oc-btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--oc-radius);
+  border: 1px solid var(--oc-border-strong);
+  background: var(--oc-surface);
+  color: var(--oc-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  font-size: 14px;
+}
+
+.oc-btn:hover {
+  background: var(--oc-surface-hover);
+}
+
+.oc-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.oc-btn-primary {
+  background: var(--oc-primary);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 500;
+}
+
+.oc-btn-primary:hover {
+  background: var(--oc-primary-hover);
+}
+
+.oc-btn-danger {
+  background: var(--oc-danger);
+  border-color: transparent;
+  color: #fff;
+}
+
+.oc-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--oc-text-secondary);
+}
+
+.oc-input {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--oc-border-strong);
+  border-radius: var(--oc-radius);
+  background: var(--oc-surface);
+  color: var(--oc-text);
+  width: 100%;
+  font: inherit;
+}
+
+.oc-input:focus {
+  outline: none;
+  border-color: var(--oc-primary);
+  box-shadow: var(--oc-ring);
+}
+
+.oc-skip {
+  position: absolute;
+  left: -9999px;
+}
+
+.oc-skip:focus {
+  left: 8px;
+  top: 8px;
+  z-index: 100;
+  background: var(--oc-surface);
+  padding: 8px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------- layout */
+.oc-page {
+  /* Intentionally no transform/opacity animation here: animated ancestors
+     would create a stacking context and make fixed drawers/modals render
+     under the app header. */
+  position: relative;
+}
+
+@keyframes oc-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.oc-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.oc-eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--oc-primary);
+  margin-bottom: 6px;
+}
+
+.oc-title {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.oc-subtitle {
+  margin: 8px 0 0;
+  max-width: 760px;
+  font-size: 14px;
+  color: var(--oc-text-secondary);
+}
+
+.oc-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  background: var(--oc-surface);
+  border: 1px solid var(--oc-border);
+  border-radius: var(--oc-radius-lg);
+  box-shadow: var(--oc-shadow);
+}
+
+.oc-stat-label {
+  font-size: 12px;
+  color: var(--oc-text-tertiary);
+}
+
+.oc-stat-value {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.oc-stat-hint {
+  font-size: 12px;
+  color: var(--oc-text-secondary);
+}
+
+/* ---------------------------------------------------------------- cards */
+.oc-card {
+  background: var(--oc-surface);
+  border: 1px solid var(--oc-border);
+  border-radius: var(--oc-radius-lg);
+  box-shadow: var(--oc-shadow);
+}
+
+.oc-provider-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.oc-provider-card:hover {
+  border-color: var(--oc-border-strong);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.oc-provider-card.is-active {
+  border-color: var(--oc-primary);
+  box-shadow: 0 0 0 1px var(--oc-primary), 0 6px 20px rgba(37, 99, 235, 0.12);
+}
+
+.oc-provider-card.is-disabled {
+  opacity: 0.78;
+}
+
+.oc-provider-card.is-active::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  border-radius: 12px 0 0 12px;
+  background: var(--oc-primary);
+}
+
+/* ---------------------------------------------------------------- badges */
+.oc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--oc-text-secondary);
+  background: var(--oc-surface-hover);
+  white-space: nowrap;
+}
+
+.oc-badge-primary {
+  color: var(--oc-primary);
+  background: var(--oc-primary-subtle);
+}
+
+.oc-model-chip {
+  display: inline-block;
+  max-width: 100%;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 11px;
+  color: var(--oc-text-secondary);
+  background: var(--oc-surface-hover);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- drawer */
+.oc-drawer {
+  background: var(--oc-surface-raised);
+  border-left: 1px solid var(--oc-border);
+  box-shadow: -24px 0 48px rgba(15, 23, 42, 0.18);
+  animation: oc-drawer-in 0.2s ease both;
+}
+
+@keyframes oc-drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.oc-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--oc-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.oc-icon-btn:hover {
+  background: var(--oc-surface-hover);
+  color: var(--oc-text);
+}
+
+.oc-field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--oc-text);
+}
+
+.oc-field-hint {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--oc-text-tertiary);
+}
+
+.oc-switch-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--oc-border-strong);
+  border-radius: var(--oc-radius);
+  font-size: 13px;
+  color: var(--oc-text-secondary);
+  cursor: pointer;
+  width: 100%;
+}
+
+.oc-switch-row input {
+  accent-color: var(--oc-primary);
+}
+
+/* ---------------------------------------------------------------- toast */
+.oc-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--oc-border);
+  border-left: 3px solid var(--oc-success);
+  border-radius: var(--oc-radius);
+  background: var(--oc-surface-raised);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16);
+  font-size: 13px;
+  color: var(--oc-text);
+  animation: oc-toast-in 0.18s ease both;
+}
+
+@keyframes oc-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------------------------------------------------------------- misc */
+.oc-btn-sm {
+  height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.oc-divider {
+  height: 1px;
+  background: var(--oc-border);
+}
+
+.oc-scroll::-webkit-scrollbar,
+.oc-drawer ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.oc-drawer ::-webkit-scrollbar-thumb {
+  background: var(--oc-border-strong);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::selection {
+  background: rgba(37, 99, 235, 0.18);
+}
+
+@media (max-width: 640px) {
+  .oc-title {
+    font-size: 22px;
+  }
+  .oc-provider-card {
+    padding: 16px;
+  }
+}
+
+/* 统一：旧 role=dialog 弹窗改为右侧抽屉 */
+div.fixed.inset-0:has(> [role="dialog"]) {
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: flex-end !important;
+  padding: 0 !important;
+}
+div.fixed.inset-0:has(> [role="dialog"]) > [role="dialog"] {
+  width: min(480px, 100vw) !important;
+  max-width: 480px !important;
+  height: 100% !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  overflow-y: auto !important;
+  box-shadow: -12px 0 40px rgba(15, 23, 42, 0.18) !important;
+  animation: oc-drawer-in 180ms ease-out;
+}
+@keyframes oc-drawer-in {
+  from { transform: translateX(24px); opacity: 0.6; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@media (max-width: 640px) {
+  div.fixed.inset-0:has(> [role="dialog"]) > [role="dialog"] {
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+}

@@ -1,0 +1,285 @@
+{
+  "generated_at": "2026-11-08",
+  "scope": "G-V4（M3 实现态）：openapi 1.1.0 之外的实现扩展；不进 1.1.0，1.2 以 x-mvp-alias 收编或正式新增",
+  "policy": "MVP extension 不计入 unexpected extras；也不得反向要求修改 1.1.0。blocked 类为上游存在但门面禁止公开的内部动作（advance/internal/_debug/metrics/admin）。",
+  "extensions": [
+    {
+      "method": "POST",
+      "path": "/api/v1/mcp-versions/{versionId}/review",
+      "owner": "platform-backend",
+      "disposition": "1.2 x-mvp-alias（1.1 canonical: /mcp-servers/{id}/versions/{versionId}/review）",
+      "note": "平铺版本管理别名"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/mcp-versions/{versionId}/publish",
+      "owner": "platform-backend",
+      "disposition": "1.2 x-mvp-alias（canonical: /mcp-servers/{id}/versions/{versionId}/publish）",
+      "note": "平铺版本管理别名"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/mcp-versions/{versionId}/yank",
+      "owner": "platform-backend",
+      "disposition": "1.2 x-mvp-alias（canonical: /mcp-servers/{id}/versions/{versionId}/yank）",
+      "note": "平铺版本管理别名"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/mcp-versions/{versionId}",
+      "owner": "platform-backend",
+      "disposition": "1.2 x-mvp-alias（canonical: /mcp-servers/{id}/versions/{versionId}）",
+      "note": "平铺版本读取别名"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/mcp-bindings/{bindingId}/ticket",
+      "owner": "platform-backend",
+      "disposition": "MVP extension；1.2 决定公开（x-mvp-alias）或迁 /internal/（EdDSA 签发，必须鉴权+scope+审计）",
+      "note": "CONTRACT-DIFF E-01 已记录"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/dh/webhooks",
+      "owner": "model-backend",
+      "disposition": "MVP extension；1.2 正式新增（HMAC 验签）",
+      "note": "数字人回调注册"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/dh/webhooks",
+      "owner": "model-backend",
+      "disposition": "MVP extension；1.2 正式新增",
+      "note": "数字人回调注册"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/dh/webhooks/{webhookId}",
+      "owner": "model-backend",
+      "disposition": "MVP extension；1.2 正式新增",
+      "note": "数字人回调注销"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/dh/avatars",
+      "owner": "model-backend",
+      "disposition": "MVP extension；1.2 x-mvp-alias/新增",
+      "note": "资产目录"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/dh/voices",
+      "owner": "model-backend",
+      "disposition": "MVP extension；1.2 x-mvp-alias/新增",
+      "note": "资产目录"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/dh/sessions/{sessionId}/messages",
+      "owner": "model-backend",
+      "disposition": "1.2 x-mvp-alias（canonical: /dh/sessions/{id}/input）",
+      "note": "MVP 别名"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/dh/sessions/{sessionId}/end",
+      "owner": "model-backend",
+      "disposition": "1.2 x-mvp-alias（canonical: DELETE /dh/sessions/{id}）",
+      "note": "MVP 别名"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/dh/sessions/{sessionId}/events",
+      "owner": "model-backend",
+      "disposition": "MVP extension；1.2 正式新增 SSE",
+      "note": "Last-Event-ID 续传"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/workflows",
+      "owner": "capability-centers",
+      "disposition": "1.2 x-mvp-alias（canonical: /workflow-definitions）",
+      "note": "MVP 命名"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/workflows",
+      "owner": "capability-centers",
+      "disposition": "1.2 x-mvp-alias（canonical: POST /workflow-definitions）",
+      "note": "MVP 命名"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/workflows/{definitionId}",
+      "owner": "capability-centers",
+      "disposition": "1.2 x-mvp-alias",
+      "note": ""
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/workflows/{definitionId}",
+      "owner": "capability-centers",
+      "disposition": "1.2 x-mvp-alias",
+      "note": ""
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/workflows/{definitionId}",
+      "owner": "capability-centers",
+      "disposition": "1.2 x-mvp-alias",
+      "note": "canonical 无 DELETE，1.2 决定是否正式化"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/workflows/{definitionId}/versions",
+      "owner": "capability-centers",
+      "disposition": "1.2 x-mvp-alias",
+      "note": ""
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/workflows/{definitionId}/versions",
+      "owner": "capability-centers",
+      "disposition": "1.2 x-mvp-alias",
+      "note": ""
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/workflows/{definitionId}/publish",
+      "owner": "capability-centers",
+      "disposition": "1.2 语义并入 createVersion；MVP alias",
+      "note": "publish = 创建不可变版本并置 latest"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/workflow-runs",
+      "owner": "capability-centers",
+      "disposition": "1.2 x-mvp-alias（canonical: /workflow-instances）",
+      "note": ""
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/workflow-runs",
+      "owner": "capability-centers",
+      "disposition": "1.2 x-mvp-alias",
+      "note": ""
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/workflow-runs/{runId}",
+      "owner": "capability-centers",
+      "disposition": "1.2 x-mvp-alias",
+      "note": ""
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/workflow-runs/{runId}/events",
+      "owner": "capability-centers",
+      "disposition": "1.2 x-mvp-alias",
+      "note": ""
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/workflow-runs/{runId}/cancel",
+      "owner": "capability-centers",
+      "disposition": "1.2 x-mvp-alias",
+      "note": ""
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/workflow-runs/{runId}/signal",
+      "owner": "capability-centers",
+      "disposition": "1.2 x-mvp-alias",
+      "note": ""
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/workflow-templates",
+      "owner": "capability-centers",
+      "disposition": "MVP extension；1.2 正式新增模板市场只读目录",
+      "note": ""
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/workflow-templates/{templateId}",
+      "owner": "capability-centers",
+      "disposition": "MVP extension；1.2 正式新增",
+      "note": ""
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/dh/sessions/{sessionId}/interrupt",
+      "owner": "model-backend",
+      "disposition": "MVP extension；1.2 正式新增或并入 /input{interrupt:true}",
+      "note": "打断当前播报"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/workflow-service/health",
+      "owner": "platform-backend",
+      "disposition": "运维探针（门面聚合），不进业务契约",
+      "note": "session 保护"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/digital-human/health",
+      "owner": "platform-backend",
+      "disposition": "运维探针（门面聚合），不进业务契约",
+      "note": "session 保护"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/dev-login",
+      "owner": "platform-backend",
+      "disposition": "dev-only 登录（生产关闭），不进业务契约",
+      "note": "已有 reason dev_login_disabled"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/model-config/preview",
+      "owner": "platform-backend",
+      "disposition": "MVP extension（模型中心配置预览，1.2 收编或并入 /models 参数）",
+      "note": "G4 已有"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/model-provider-presets",
+      "owner": "platform-backend",
+      "disposition": "MVP extension（provider 预设目录）",
+      "note": "G4 已有"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/model-providers/{providerId}/activate",
+      "owner": "platform-backend",
+      "disposition": "MVP extension（启用 provider）",
+      "note": "1.2 收编"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/model-providers/{providerId}/sync",
+      "owner": "platform-backend",
+      "disposition": "MVP extension（同步模型目录）",
+      "note": "1.2 收编"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/model-providers/{providerId}/test",
+      "owner": "platform-backend",
+      "disposition": "MVP extension（连通性测试）",
+      "note": "1.2 收编"
+    }
+  ],
+  "blocked": [
+    {
+      "method": "POST",
+      "path": "/api/v1/workflow-runs/{runId}/advance",
+      "reason": "非用户动作；门面 BLOCKED_SEGMENTS 拦截（advance），上游仅供内部编排"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/workflow-instances/{runId}/advance",
+      "reason": "同上"
+    }
+  ]
+}

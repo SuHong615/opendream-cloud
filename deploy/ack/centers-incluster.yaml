@@ -1,0 +1,179 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skill-center
+  namespace: opencode-system
+  labels: { app.kubernetes.io/name: skill-center, app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: skill-center } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: skill-center, app.kubernetes.io/part-of: opendream-cloud }
+    spec:
+      containers:
+        - name: skill-center
+          image: docker.m.daocloud.io/oven/bun:1.4.4
+          command: ['/bin/sh', '-c']
+          args:
+            - >-
+              set -e; mkdir -p /work; tar xzf /src/src.tgz -C /work;
+              cd /work/services/skill-center;
+              bun install --production --registry https://registry.npmmirror.com;
+              exec bun src/server.ts
+          env:
+            - { name: NODE_ENV, value: development }
+            - { name: PORT, value: '4101' }
+          ports: [{ containerPort: 4101, name: http }]
+          readinessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 10, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 40, periodSeconds: 20 }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 300m, memory: 384Mi }
+          volumeMounts: [{ name: src, mountPath: /src, readOnly: true }]
+      volumes: [{ name: src, configMap: { name: skill-center-src } }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: skill-center
+  namespace: opencode-system
+  labels: { app.kubernetes.io/name: skill-center }
+spec:
+  selector: { app.kubernetes.io/name: skill-center }
+  ports: [{ name: http, port: 4101, targetPort: http }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eval-center
+  namespace: opencode-system
+  labels: { app.kubernetes.io/name: eval-center, app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: eval-center } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: eval-center, app.kubernetes.io/part-of: opendream-cloud }
+    spec:
+      containers:
+        - name: eval-center
+          image: docker.m.daocloud.io/oven/bun:1.4.4
+          command: ['/bin/sh', '-c']
+          args:
+            - >-
+              set -e; mkdir -p /work; tar xzf /src/src.tgz -C /work;
+              cd /work/services/eval-center;
+              bun install --production --registry https://registry.npmmirror.com;
+              exec bun src/server.ts
+          env:
+            - { name: NODE_ENV, value: development }
+            - { name: PORT, value: '4102' }
+          ports: [{ containerPort: 4102, name: http }]
+          readinessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 10, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 40, periodSeconds: 20 }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 300m, memory: 384Mi }
+          volumeMounts: [{ name: src, mountPath: /src, readOnly: true }]
+      volumes: [{ name: src, configMap: { name: eval-center-src } }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eval-center
+  namespace: opencode-system
+  labels: { app.kubernetes.io/name: eval-center }
+spec:
+  selector: { app.kubernetes.io/name: eval-center }
+  ports: [{ name: http, port: 4102, targetPort: http }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-center
+  namespace: opencode-system
+  labels: { app.kubernetes.io/name: app-center, app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: app-center } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: app-center, app.kubernetes.io/part-of: opendream-cloud }
+    spec:
+      containers:
+        - name: app-center
+          image: docker.m.daocloud.io/oven/bun:1.4.4
+          command: ['/bin/sh', '-c']
+          args:
+            - >-
+              set -e; mkdir -p /work; tar xzf /src/src.tgz -C /work;
+              cd /work/services/app-center;
+              bun install --production --registry https://registry.npmmirror.com;
+              exec bun src/server.ts
+          env:
+            - { name: NODE_ENV, value: development }
+            - { name: PORT, value: '4103' }
+          ports: [{ containerPort: 4103, name: http }]
+          readinessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 10, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 40, periodSeconds: 20 }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 300m, memory: 384Mi }
+          volumeMounts: [{ name: src, mountPath: /src, readOnly: true }]
+      volumes: [{ name: src, configMap: { name: app-center-src } }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-center
+  namespace: opencode-system
+  labels: { app.kubernetes.io/name: app-center }
+spec:
+  selector: { app.kubernetes.io/name: app-center }
+  ports: [{ name: http, port: 4103, targetPort: http }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-hub
+  namespace: opencode-system
+  labels: { app.kubernetes.io/name: mcp-hub, app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: mcp-hub } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: mcp-hub, app.kubernetes.io/part-of: opendream-cloud }
+    spec:
+      containers:
+        - name: mcp-hub
+          image: docker.m.daocloud.io/oven/bun:1.4.4
+          command: ['/bin/sh', '-c']
+          args:
+            - >-
+              set -e; mkdir -p /work; tar xzf /src/src.tgz -C /work;
+              cd /work/services/mcp-hub;
+              bun install --production --registry https://registry.npmmirror.com;
+              exec bun src/server.ts
+          env:
+            - { name: NODE_ENV, value: development }
+            - { name: PORT, value: '4104' }
+          ports: [{ containerPort: 4104, name: http }]
+          readinessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 10, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 40, periodSeconds: 20 }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 300m, memory: 384Mi }
+          volumeMounts: [{ name: src, mountPath: /src, readOnly: true }]
+      volumes: [{ name: src, configMap: { name: mcp-hub-src } }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-hub
+  namespace: opencode-system
+  labels: { app.kubernetes.io/name: mcp-hub }
+spec:
+  selector: { app.kubernetes.io/name: mcp-hub }
+  ports: [{ name: http, port: 4104, targetPort: http }]

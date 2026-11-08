@@ -1,0 +1,37 @@
+# 证书：通配符（ws/apps/dh）+ 控制面域名；由 cert-manager DNS-01 自动签发
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-example-com
+  namespace: higress-system
+  labels: { app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  secretName: wildcard-example-com
+  issuerRef:
+    name: letsencrypt-prod-dns01
+    kind: ClusterIssuer
+  dnsNames:
+    - "example.com"
+    - "*.example.com"
+    - "*.ws.example.com"
+    - "*.apps.example.com"
+    - "*.dh.example.com"
+  duration: 2160h      # 90 天
+  renewBefore: 720h    # 提前 30 天
+---
+# 自定义域名（应用中心绑定）：按域名单独签发（HTTP-01 或 DNS-01）
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: app-custom-domain-sample
+  namespace: opencode-apps
+  labels: { app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  secretName: app-custom-domain-sample-tls
+  issuerRef:
+    name: letsencrypt-prod-dns01
+    kind: ClusterIssuer
+  dnsNames:
+    - "app.example-customer.com"
+  duration: 2160h
+  renewBefore: 720h

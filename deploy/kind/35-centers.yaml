@@ -1,0 +1,157 @@
+# G5 四中心服务（MVP 骨架，无状态；生产按需拆 Deployment/扩副本）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skill-center
+  namespace: platform-system
+  labels: { app.kubernetes.io/name: skill-center, app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: skill-center } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: skill-center, app.kubernetes.io/part-of: opendream-cloud }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 10001, fsGroup: 10001, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: skill-center
+          image: registry.opendream-cloud.local/opendream-cloud/skill-center:0.1.0-g5
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 4101, name: http }]
+          env:
+            - { name: NODE_ENV, value: production }
+            - { name: PORT, value: "4101" }
+          readinessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 3, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 10, periodSeconds: 10 }
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: ["ALL"] } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: skill-center
+  namespace: platform-system
+  labels: { app.kubernetes.io/name: skill-center, app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  selector: { app.kubernetes.io/name: skill-center }
+  ports: [{ name: http, port: 4101, targetPort: http }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eval-center
+  namespace: platform-system
+  labels: { app.kubernetes.io/name: eval-center, app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: eval-center } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: eval-center, app.kubernetes.io/part-of: opendream-cloud }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 10002, fsGroup: 10002, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: eval-center
+          image: registry.opendream-cloud.local/opendream-cloud/eval-center:0.1.0-g5
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 4102, name: http }]
+          env:
+            - { name: NODE_ENV, value: production }
+            - { name: PORT, value: "4102" }
+            - { name: SANDBOX_RUNTIME_CLASS, value: sandbox-runtime }
+          readinessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 3, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 10, periodSeconds: 10 }
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: ["ALL"] } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eval-center
+  namespace: platform-system
+  labels: { app.kubernetes.io/name: eval-center, app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  selector: { app.kubernetes.io/name: eval-center }
+  ports: [{ name: http, port: 4102, targetPort: http }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-center
+  namespace: platform-system
+  labels: { app.kubernetes.io/name: app-center, app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: app-center } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: app-center, app.kubernetes.io/part-of: opendream-cloud }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 10003, fsGroup: 10003, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: app-center
+          image: registry.opendream-cloud.local/opendream-cloud/app-center:0.1.0-g5
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 4103, name: http }]
+          env:
+            - { name: NODE_ENV, value: production }
+            - { name: PORT, value: "4103" }
+          readinessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 3, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 10, periodSeconds: 10 }
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: ["ALL"] } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-center
+  namespace: platform-system
+  labels: { app.kubernetes.io/name: app-center, app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  selector: { app.kubernetes.io/name: app-center }
+  ports: [{ name: http, port: 4103, targetPort: http }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-hub
+  namespace: platform-system
+  labels: { app.kubernetes.io/name: mcp-hub, app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: mcp-hub } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: mcp-hub, app.kubernetes.io/part-of: opendream-cloud }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 10004, fsGroup: 10004, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: mcp-hub
+          image: registry.opendream-cloud.local/opendream-cloud/mcp-hub:0.1.0-g5
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 4104, name: http }]
+          env:
+            - { name: NODE_ENV, value: production }
+            - { name: PORT, value: "4104" }
+          readinessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 3, periodSeconds: 5 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 10, periodSeconds: 10 }
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: ["ALL"] } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-hub
+  namespace: platform-system
+  labels: { app.kubernetes.io/name: mcp-hub, app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  selector: { app.kubernetes.io/name: mcp-hub }
+  ports: [{ name: http, port: 4104, targetPort: http }]

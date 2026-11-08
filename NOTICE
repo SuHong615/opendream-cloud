@@ -1,0 +1,18 @@
+OpenDream Cloud
+Copyright 2026 suhong
+
+This product includes software developed as part of the OpenDream Cloud project
+and is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+The project integrates with and/or depends on third-party open-source software.
+Those components remain under their own licenses; this repository does not
+relicense them. See THIRD_PARTY_NOTICES.md for the full list and links to the
+upstream license texts.
+
+"OpenCode" is the name of the upstream open-source project
+(https://github.com/anomalyco/opencode), licensed under MIT, Copyright (c) 2025
+opencode. This repository is an independent platform built on top of the
+OpenCode engine and is not an official OpenCode distribution.
+
+The names, logos and trademarks of third-party projects belong to their
+respective owners. Use of a name does not imply endorsement.

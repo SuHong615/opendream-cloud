@@ -1,0 +1,1074 @@
+[
+  {
+    "method": "DELETE",
+    "path": "/api/v1/api-keys/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/apps/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/apps/{x}/collab-sessions/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/apps/{x}/members/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/apps/{x}/shares/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/dh/sessions/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/dh/webhooks/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/eval-evaluators/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/mcp-bindings/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/mcp-servers/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/model-providers/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/organizations/current/members/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/organizations/{x}/members/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/orgs/{x}/members/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/skill-installations/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/skills/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/workflows/{x}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/internal/mcp/servers/{x}/credentials"
+  },
+  {
+    "method": "DELETE",
+    "path": "/v1/memories/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/.well-known/mcp-jwks.json"
+  },
+  {
+    "method": "GET",
+    "path": "/.well-known/workspace-jwks.json"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/api-keys"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/public/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/builds"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/builds/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/collab"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/collab-sessions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/collab-sessions/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/collab-sessions/{x}/messages"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/collab-sessions/{x}/proposals"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/collab/messages"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/collab/proposals"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/deployments"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/deployments/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/domains"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/logs"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/members"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/permissions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/shares"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/apps/{x}/versions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/audit-logs"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/auth/csrf"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/dh/avatars"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/dh/render-jobs"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/dh/render-jobs/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/dh/sessions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/dh/sessions/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/dh/sessions/{x}/events"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/dh/voices"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/dh/webhooks"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/digital-human/health"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/eval-datasets"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/eval-datasets/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/eval-datasets/{x}/versions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/eval-evaluators"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/eval-evaluators/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/eval-runs"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/eval-runs/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/eval-runs/{x}/baselines"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/eval-runs/{x}/report"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/eval-runs/{x}/results"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/experiences"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/experiences/search"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/health"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/human-tasks"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/mcp-bindings"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/mcp-call-logs"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/mcp-oauth/callback"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/mcp-servers"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/mcp-servers/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/mcp-servers/{x}/channels"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/mcp-servers/{x}/health"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/mcp-servers/{x}/tool-policies"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/mcp-servers/{x}/tool-policy"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/mcp-servers/{x}/tools"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/mcp-servers/{x}/versions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/mcp-servers/{x}/versions/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/mcp-versions/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/me"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/model-config/preview"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/model-policies"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/model-policies/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/model-provider-presets"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/model-providers"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/models"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/models/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/observability/overview"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/observability/timeseries"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/organizations/current"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/organizations/current/members"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/organizations/current/quotas"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/organizations/{x}/members"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/organizations/{x}/quotas"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/orgs/{x}/members"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/orgs/{x}/quotas"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/skill-installations"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/skills"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/skills/by-slug/{x}/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/skills/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/skills/{x}/stats"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/skills/{x}/versions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/skills/{x}/versions/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/usage"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workflow-definitions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workflow-definitions/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workflow-definitions/{x}/versions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workflow-instances"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workflow-instances/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workflow-instances/{x}/events"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workflow-runs"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workflow-runs/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workflow-runs/{x}/events"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workflow-service/health"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workflow-templates"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workflow-versions/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workflows"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workflows/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workspaces"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workspaces/me"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workspaces/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workspaces/{x}/events"
+  },
+  {
+    "method": "GET",
+    "path": "/healthz"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/apps/{x}/authz"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/eval/compare"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/eval/runs/{x}/reproduce"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/eval/specs"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/mcp/calls"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/mcp/servers/{x}/credentials"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/mcp/servers/{x}/tools"
+  },
+  {
+    "method": "GET",
+    "path": "/internal/skills/source-keys"
+  },
+  {
+    "method": "GET",
+    "path": "/readyz"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/memories"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/{x}/{x}"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/{x}/{x}/mcp"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/{x}/{x}/sse"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/apps/{x}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/apps/{x}/members/{x}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/apps/{x}/shares/{x}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/eval-evaluators/{x}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/mcp-servers/{x}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/model-providers/{x}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/organizations/current/members/{x}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/organizations/{x}/members/{x}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/orgs/{x}/members/{x}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/skill-installations/{x}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/skills/{x}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/workflow-definitions/{x}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/workflows/{x}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/workspaces/{x}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/api-keys"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/access-requests"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/access-ticket"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/builds"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/builds/{x}/retry"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/collab-sessions"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/collab-sessions/{x}/messages"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/collab-sessions/{x}/proposals"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/collab/messages"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/collab/proposals"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/collab/proposals/{x}/approve"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/collab/proposals/{x}/reject"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/deployments"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/deployments/{x}/rollback"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/domains"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/domains/{x}/verify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/members"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/preflight"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/rollback"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/shares"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/shares/preview"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/sleep"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/suspend"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/versions/{x}/rollback"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/apps/{x}/wake"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/auth/dev-login"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/auth/logout"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/dh/embed-tokens"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/dh/render-jobs"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/dh/sessions"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/dh/sessions/{x}/end"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/dh/sessions/{x}/input"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/dh/sessions/{x}/messages"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/dh/webhooks"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/eval-datasets"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/eval-evaluators"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/eval-runs"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/eval-runs/{x}/baselines"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/eval-runs/{x}/cancel"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/experiences"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/human-tasks/{x}/decision"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-bindings"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-bindings/{x}/rotate-token"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-bindings/{x}/ticket"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-servers"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-servers/{x}/deprecate"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-servers/{x}/health-check"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-servers/{x}/offline"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-servers/{x}/publish"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-servers/{x}/review"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-servers/{x}/rollback"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-servers/{x}/submit-review"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-servers/{x}/versions"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-servers/{x}/versions/{x}/publish"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-servers/{x}/versions/{x}/review"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-servers/{x}/versions/{x}/yank"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-versions/{x}/publish"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/mcp-versions/{x}/review"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/model-policies"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/model-policies/{x}/preview"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/model-providers"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/model-providers/{x}/activate"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/model-providers/{x}/sync"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/model-providers/{x}/test"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/organizations/current/members"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/organizations/{x}/members"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orgs/{x}/members"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/skills"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/skills/{x}/install"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/skills/{x}/versions"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/skills/{x}/versions/{x}/publish"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/skills/{x}/versions/{x}/review"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/skills/{x}/versions/{x}/rollback"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/skills/{x}/versions/{x}/submit-review"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/skills/{x}/versions/{x}/yank"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workflow-definitions"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workflow-definitions/{x}/versions"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workflow-instances"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workflow-instances/{x}/cancel"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workflow-instances/{x}/signal"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workflow-runs/{x}/cancel"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workflows"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workflows/{x}/publish"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workflows/{x}/runs"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workspaces"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workspaces/me/ensure"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workspaces/{x}/access-ticket"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workspaces/{x}/destroy"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workspaces/{x}/destroy/cancel"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workspaces/{x}/start"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/workspaces/{x}/stop"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/app-runtime/llm/chat"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/collab/tick"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/eval/gates/skill"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/eval/specs"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/eval/webhooks/ci"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/mcp/call-logs{x}"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/mcp/jti{x}"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/mcp/proxy/{x}"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/mcp/servers/{x}/credentials"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/mcp/servers/{x}/test-connection"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/mcp/webhooks/health"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/skills/{x}/source-token"
+  },
+  {
+    "method": "POST",
+    "path": "/internal/workflow-runs/{x}/advance"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/memories"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/memories/search"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/{x}/{x}"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/{x}/{x}/mcp"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/mcp-servers/{x}/channels/{x}"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/mcp-servers/{x}/tool-policies"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/mcp-servers/{x}/tool-policy"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/model-policies/{x}"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/organizations/current/quotas"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/organizations/{x}/quotas"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/orgs/{x}/quotas"
+  },
+  {
+    "method": "PUT",
+    "path": "/internal/mcp/servers/{x}/tool-policy"
+  }
+]

@@ -1,0 +1,109 @@
+# OpenDream control-plane HA (Kubernetes)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: opendream-control-plane
+  namespace: opendream-control
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: control-plane
+  namespace: opendream-control
+  labels:
+    app.kubernetes.io/name: control-plane
+    app.kubernetes.io/part-of: opendream
+spec:
+  replicas: 3
+  strategy:
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector:
+    matchLabels: { app.kubernetes.io/name: control-plane }
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: control-plane
+        app.kubernetes.io/part-of: opendream
+    spec:
+      serviceAccountName: opendream-control-plane
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: { app.kubernetes.io/name: control-plane }
+      containers:
+        - name: control-plane
+          image: opendream-cloud/control-plane:0.1.0
+          ports: [{ name: http, containerPort: 4000 }]
+          env:
+            - { name: CONTROL_PLANE_PORT, value: "4000" }
+            - { name: NODE_ENV, value: "production" }
+            - { name: REDIS_URL, valueFrom: { secretKeyRef: { name: opendream-infra, key: REDIS_URL } } }
+            - { name: NATS_URL, valueFrom: { secretKeyRef: { name: opendream-infra, key: NATS_URL } } }
+            - { name: S3_ENDPOINT, valueFrom: { secretKeyRef: { name: opendream-infra, key: S3_ENDPOINT } } }
+            - { name: S3_BUCKET, valueFrom: { secretKeyRef: { name: opendream-infra, key: S3_BUCKET } } }
+            - { name: S3_ACCESS_KEY, valueFrom: { secretKeyRef: { name: opendream-infra, key: S3_ACCESS_KEY } } }
+            - { name: S3_SECRET_KEY, valueFrom: { secretKeyRef: { name: opendream-infra, key: S3_SECRET_KEY } } }
+          envFrom: [{ secretRef: { name: control-plane-env } }]
+          resources:
+            requests: { cpu: 250m, memory: 512Mi }
+            limits: { cpu: "2", memory: 2Gi }
+          readinessProbe: { httpGet: { path: /readyz, port: http }, initialDelaySeconds: 5, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 20, periodSeconds: 20 }
+          startupProbe: { httpGet: { path: /healthz, port: http }, failureThreshold: 30, periodSeconds: 2 }
+          lifecycle:
+            preStop:
+              exec: { command: ["sh", "-c", "sleep 5"] }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          volumeMounts:
+            - { name: data, mountPath: /app/.data }
+            - { name: tmp, mountPath: /tmp }
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - { name: data, emptyDir: { sizeLimit: 1Gi } }
+        - { name: tmp, emptyDir: { sizeLimit: 256Mi } }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: control-plane
+  namespace: opendream-control
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels: { app.kubernetes.io/name: control-plane }
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: control-plane
+  namespace: opendream-control
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: control-plane }
+  minReplicas: 3
+  maxReplicas: 12
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 65 } }
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies: [{ type: Percent, value: 25, periodSeconds: 60 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: control-plane
+  namespace: opendream-control
+spec:
+  selector: { app.kubernetes.io/name: control-plane }
+  ports: [{ name: http, port: 4000, targetPort: 4000 }]

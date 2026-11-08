@@ -1,0 +1,43 @@
+{{- if .Values.quota.enabled }}
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: workspaces
+  namespace: {{ .Values.namespace.workspacesPrefix }}demo
+  labels: {{- include "opendream-cloud.labels" . | nindent 4 }}
+spec:
+  hard:
+    requests.cpu: {{ .Values.quota.workspace.cpu | quote }}
+    requests.memory: {{ .Values.quota.workspace.memory | quote }}
+    limits.cpu: {{ .Values.quota.workspace.cpu | quote }}
+    limits.memory: {{ .Values.quota.workspace.memory | quote }}
+    persistentvolumeclaims: {{ .Values.quota.workspace.pvcs | quote }}
+    requests.storage: {{ .Values.quota.workspace.storage | quote }}
+    count/opencodeworkspaces.workspace.opencode.cloud: {{ .Values.quota.workspace.pvcs | quote }}
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: apps
+  namespace: {{ .Values.namespace.apps }}
+  labels: {{- include "opendream-cloud.labels" . | nindent 4 }}
+spec:
+  hard:
+    requests.cpu: {{ .Values.quota.app.cpu | quote }}
+    requests.memory: {{ .Values.quota.app.memory | quote }}
+    limits.cpu: {{ .Values.quota.app.cpu | quote }}
+    limits.memory: {{ .Values.quota.app.memory | quote }}
+{{- end }}
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: workspace-limits
+  namespace: {{ .Values.namespace.workspacesPrefix }}demo
+  labels: {{- include "opendream-cloud.labels" . | nindent 4 }}
+spec:
+  limits:
+    - type: Container
+      default: { cpu: {{ .Values.workspace.cpu | quote }}, memory: {{ .Values.workspace.memory | quote }} }
+      defaultRequest: { cpu: {{ .Values.workspace.cpu | quote }}, memory: {{ .Values.workspace.memory | quote }} }
+      max: { cpu: {{ .Values.workspace.cpu | quote }}, memory: {{ .Values.workspace.memory | quote }} }

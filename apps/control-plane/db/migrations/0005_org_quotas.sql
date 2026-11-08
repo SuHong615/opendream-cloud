@@ -1,0 +1,9 @@
+-- 0005_org_quotas.sql — M5 组织配额（M5-3）
+CREATE TABLE IF NOT EXISTS org_quotas (
+  org_id TEXT PRIMARY KEY,
+  workspaces INTEGER NOT NULL DEFAULT 10,
+  members INTEGER NOT NULL DEFAULT 50,
+  budget_usd REAL NOT NULL DEFAULT 100,
+  mcp_servers INTEGER NOT NULL DEFAULT 20,
+  updated_at INTEGER NOT NULL DEFAULT 0
+);

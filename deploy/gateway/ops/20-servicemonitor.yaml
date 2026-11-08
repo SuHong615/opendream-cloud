@@ -1,0 +1,60 @@
+# 监控采集（Prometheus Operator / ARMS 兼容）
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: higress-gateway
+  namespace: higress-system
+  labels: { release: prometheus }
+spec:
+  selector:
+    matchLabels: { app.kubernetes.io/name: higress-gateway }
+  namespaceSelector: { matchNames: [higress-system] }
+  endpoints:
+    - port: metrics
+      interval: 15s
+      path: /stats/prometheus
+      scheme: http
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: control-plane
+  namespace: opencode-control
+  labels: { release: prometheus }
+spec:
+  selector:
+    matchLabels: { app.kubernetes.io/name: control-plane }
+  namespaceSelector: { matchNames: [opencode-control] }
+  endpoints:
+    - port: http
+      interval: 15s
+      path: /metrics
+      scheme: http
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mcp-gateway
+  namespace: opencode-gateway
+  labels: { release: prometheus }
+spec:
+  selector:
+    matchLabels: { app.kubernetes.io/name: mcp-gateway }
+  endpoints:
+    - port: metrics
+      interval: 15s
+      path: /metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: litellm
+  namespace: opencode-gateway
+  labels: { release: prometheus }
+spec:
+  selector:
+    matchLabels: { app.kubernetes.io/name: litellm }
+  endpoints:
+    - port: http
+      interval: 15s
+      path: /metrics

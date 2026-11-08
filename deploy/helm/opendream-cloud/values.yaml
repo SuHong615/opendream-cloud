@@ -1,0 +1,83 @@
+# 环境无关默认值；覆盖用 values-{dev,staging,prod}.yaml
+global:
+  domain: example.com
+  environment: dev
+  imagePullSecrets: []
+
+controlPlane:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: opendream-cloud/control-plane
+    tag: "0.1.0"
+    digest: ""            # 生产必填 digest
+  port: 4000
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+  env:
+    DESTROY_COOLDOWN_MIN: "5"
+    ALLOW_DEV_LOGIN: "1"
+  existingSecret: control-plane-env
+
+operator:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: opendream-cloud/workspace-operator
+    tag: "0.1.0"
+    digest: ""
+  leaderElection: true
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+  workspaceDomain: ""      # 空则用 global.domain
+  crd:
+    create: true
+
+# G5 四中心服务镜像（MVP 骨架；生产替换 registry/tag/digest）
+images:
+  skillCenter: registry.opendream-cloud.local/opendream-cloud/skill-center:0.1.0-g5
+  evalCenter: registry.opendream-cloud.local/opendream-cloud/eval-center:0.1.0-g5
+  appCenter: registry.opendream-cloud.local/opendream-cloud/app-center:0.1.0-g5
+  mcpHub: registry.opendream-cloud.local/opendream-cloud/mcp-hub:0.1.0-g5
+
+# 工作区默认值（operator 从 CR 读取；这里只用于文档化/Chart 校验）
+workspace:
+  size: "4C8G"
+  cpu: "4"
+  memory: 8Gi
+  pvcSize: 20Gi
+  pvcStorageClass: alicloud-disk-essd
+  pvcReclaimPolicy: Retain
+
+# 应用默认值（1C2G）
+app:
+  cpu: "1"
+  memory: 2Gi
+  port: 3000
+
+namespace:
+  create: false
+  workspacesPrefix: ws-
+  system: opencode-system
+  control: opencode-control
+  gateway: opencode-gateway
+  apps: opencode-apps
+
+networkPolicy:
+  enabled: true
+  defaultDeny: true
+  egressProxy: egress-proxy
+  litellm: litellm
+
+quota:
+  enabled: true
+  workspace:
+    cpu: "4000"
+    memory: 8000Gi
+    pvcs: 1200
+    storage: 24Ti
+  app:
+    cpu: "300"
+    memory: 600Gi

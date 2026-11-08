@@ -1,0 +1,32 @@
+sequenceDiagram
+  autonumber
+  participant U as 开发者
+  participant C as Console
+  participant AC as App Center（控制面）
+  participant W as opencode Workspace
+  participant BK as BuildKit Job（sandbox）
+  participant ACR as ACR
+  participant RT as App Runtime（1C2G）
+  participant GW as app-gateway
+  participant V as 使用者
+
+  U->>C: 从工作区发布应用（入口/上下文/模板）
+  C->>AC: POST /apps + preflight
+  AC->>W: 导出构建上下文（git archive，排除 .git/node_modules）
+  AC->>BK: 创建构建 Job（rootless BuildKit，缓存）
+  BK->>ACR: push rev-uuid（不可变 tag）
+  BK-->>AC: digest + SBOM + Trivy 结果
+  AC->>RT: Deployment 1C2G + Service + Ingress
+  AC->>GW: 注册路由 + 证书
+  AC-->>U: 部署就绪 + URL
+  U->>C: 分享设置（scope/role/subject/过期）
+  C->>AC: 写 ACL（Redis 主动失效 ≤5s）
+  V->>GW: 打开分享链接
+  GW->>GW: 无会话 → 302 控制台登录（next=原 URL）
+  V->>C: SSO 登录
+  C->>AC: 申请 app access-ticket（aud=app:id，60s）
+  AC-->>C: ticket + url
+  V->>GW: ?__ticket=...（一次性）
+  GW->>GW: 验签（JWKS 本地）+ ACL 校验 + 设 __Host-oc_app
+  GW->>RT: 反代（302 去 ticket）
+  RT-->>V: 应用页面

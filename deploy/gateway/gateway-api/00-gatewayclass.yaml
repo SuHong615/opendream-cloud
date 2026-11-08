@@ -1,0 +1,26 @@
+# GatewayClass：Higress 作为统一入口（生产默认，ADR-GW-01）
+# 注意：controllerName 以实际安装的 Higress 版本为准（v2.2.x 常见为 higress.io/gateway-controller）
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: higress
+  labels: { app.kubernetes.io/part-of: opendream-cloud, opencode.cloud/gateway: higress }
+spec:
+  controllerName: higress.io/gateway-controller
+  description: "OpenDream Cloud 统一 AI 网关（Higress）：LLM / MCP / K8s 推理 / 应用与工作区入口"
+  parametersRef:
+    group: ""
+    kind: ConfigMap
+    name: higress-gatewayclass-config
+    namespace: higress-system
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: higress-gatewayclass-config
+  namespace: higress-system
+data:
+  # 样例开关；实际参数以 Higress 文档为准
+  enableAI: "true"
+  enableMcp: "true"
+  logLevel: info

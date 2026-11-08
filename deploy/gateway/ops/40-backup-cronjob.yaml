@@ -1,0 +1,75 @@
+# 网关配置/证书导出备份（每日 02:30）；GitOps 仍是唯一事实源，这里做离线兜底与审计留档
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: gateway-config-backup
+  namespace: higress-system
+  labels: { app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  schedule: "30 2 * * *"          # 北京时间 02:30（集群时区需一致）
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 600
+      template:
+        spec:
+          serviceAccountName: gateway-backup
+          restartPolicy: Never
+          containers:
+            - name: backup
+              image: registry.cn-beijing.aliyuncs.com/opencode-prod/kubectl-oss:0.1.0
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -euo pipefail
+                  TS=$(date -u +%Y%m%dT%H%M%SZ)
+                  OUT=/tmp/gateway-${TS}
+                  mkdir -p "$OUT"
+                  kubectl get gatewayclass,gateway,httproute,referencegrant -A -o yaml > "$OUT/gateway-api.yaml"
+                  kubectl get wasmplugin,mcpbridge -n higress-system -o yaml > "$OUT/higress-plugins.yaml" || true
+                  kubectl get certificate -n higress-system -o yaml > "$OUT/certificates.yaml"
+                  kubectl get secret wildcard-example-com -n higress-system -o yaml > "$OUT/tls-secret.yaml" || true
+                  tar -czf /tmp/gateway-${TS}.tgz -C /tmp "gateway-${TS}"
+                  # 上传 OSS（内网 endpoint + STS）；密钥来自 Secret，不落盘
+                  ossutil cp /tmp/gateway-${TS}.tgz "oss://${OSS_BUCKET}/backups/gateway/gateway-${TS}.tgz" \
+                    --endpoint "https://oss-${OSS_REGION}-internal.aliyuncs.com"
+              env:
+                - { name: OSS_BUCKET, valueFrom: { secretKeyRef: { name: gateway-backup-oss, key: bucket } } }
+                - { name: OSS_REGION, valueFrom: { secretKeyRef: { name: gateway-backup-oss, key: region } } }
+              resources:
+                requests: { cpu: 50m, memory: 128Mi }
+                limits: { cpu: 200m, memory: 256Mi }
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
+              volumeMounts: [{ name: tmp, mountPath: /tmp }]
+          volumes: [{ name: tmp, emptyDir: { sizeLimit: 256Mi } }]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: gateway-backup, namespace: higress-system }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: gateway-backup-readonly }
+rules:
+  - apiGroups: ["gateway.networking.k8s.io"]
+    resources: ["gatewayclasses", "gateways", "httproutes", "referencegrants"]
+    verbs: ["get", "list"]
+  - apiGroups: ["extensions.higress.io"]
+    resources: ["wasmplugins", "mcpbridges"]
+    verbs: ["get", "list"]
+  - apiGroups: ["cert-manager.io"]
+    resources: ["certificates"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: gateway-backup-readonly }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: gateway-backup-readonly }
+subjects: [{ kind: ServiceAccount, name: gateway-backup, namespace: higress-system }]

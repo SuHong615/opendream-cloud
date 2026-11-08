@@ -1,0 +1,38 @@
+# AI Proxy 插件样例：模型路由 / 供应商 fallback（入口层；预算/计量权威在 LiteLLM）
+# 说明：默认把 llm.* 原样转发给 LiteLLM；只有"直接对接某供应商"或"跨供应商兜底"时才启用本插件。
+apiVersion: extensions.higress.io/v1alpha1
+kind: WasmPlugin
+metadata:
+  name: ai-proxy
+  namespace: higress-system
+  labels: { app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  url: oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-proxy:2.2.4
+  phase: UNSPECIFIED_PHASE
+  priority: 200
+  matchRules:
+    - ingress:
+        - higress-system/higress-public
+      config:
+        providers:
+          - name: primary-openai-compatible
+            type: openai
+            apiTokens:
+              - "{{ env \"PRIMARY_MODEL_API_KEY\" }}"
+            modelMapping:
+              "oc-default": "gpt-4o-mini"
+          - name: fallback-deepseek
+            type: deepseek
+            apiTokens:
+              - "{{ env \"FALLBACK_MODEL_API_KEY\" }}"
+        routing:
+          # 95% 主供应商，5% 备用（灰度）；失败按顺序 fallback
+          - model: "oc-default"
+            targets:
+              - { provider: primary-openai-compatible, weight: 95 }
+              - { provider: fallback-deepseek, weight: 5 }
+        # 重试边界：仅连接失败/未返回响应头时重试；非幂等请求不重试
+        retry:
+          attempts: 1
+          retryOn: ["connect-failure", "refused-stream"]
+        timeout: 300s

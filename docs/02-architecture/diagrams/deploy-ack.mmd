@@ -1,0 +1,78 @@
+flowchart TB
+  classDef net fill:#eef2ff,stroke:#4f46e5,color:#1e1b4b
+  classDef svc fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+  classDef data fill:#f0fdf4,stroke:#16a34a,color:#14532d
+  classDef gpu fill:#fff7ed,stroke:#ea580c,color:#7c2d12
+  classDef store fill:#fef9c3,stroke:#ca8a04,color:#713f12
+
+  subgraph REGION["阿里云 Region（单地域 · 3 AZ）"]
+    subgraph EDGE["边缘"]
+      SLB["SLB + WAF + 证书<br/>*.mcp / *.apps / *.ws / *.dh"]:::net
+      HIG["Higress ×4（Gateway API）<br/>路由/限流/灰度/ext-auth"]:::svc
+    end
+
+    subgraph PLAT["ns: platform-system（3 AZ 均摊）"]
+      CP["control-plane ×6<br/>Fastify + PG"]:::svc
+      AUTH["auth-edge ×3<br/>唯一 OIDC RP"]:::svc
+      MCPGW["mcp-gateway ×3<br/>工具级 PEP"]:::data
+      MGW["model-gateway(LiteLLM) ×3"]:::data
+      TRIG["trigger-bus<br/>Redis Streams/NATS"]:::data
+      WF["workflow workers ×N<br/>agent/tool/human/render"]:::svc
+      OBS["OTel/Prom/Loki/Grafana"]:::svc
+      TEMP["Temporal ×3+3+3<br/>frontend/history/matching"]:::svc
+    end
+
+    subgraph WSNS["ns: ws-orgId（每组织）"]
+      WSPOD["opencode workspace ×1000<br/>4C8G Guaranteed"]:::data
+      WPV[("PVC ESSD 20GiB Retain")]:::store
+    end
+
+    subgraph APPNS["ns: apps（共享，tenant 标签）"]
+      APOD["App runtime ×N<br/>1C2G sandbox-runtime"]:::data
+    end
+
+    subgraph SANDBOX["ns: sandbox"]
+      EVAL["eval Job / buildkit<br/>sandbox-runtime 禁网"]:::gpu
+    end
+
+    subgraph DHNS["ns: digital-human"]
+      DHW["ASR/TTS/lip-sync Worker"]:::gpu
+      GPUP["GPU 池 A10 ×N<br/>KEDA 扩缩"]:::gpu
+      SFU["WebRTC SFU ×3<br/>LiveKit"]:::data
+    end
+
+    subgraph STORAGE["托管数据"]
+      RDS[("RDS PG16 主+只读")]:::store
+      REDIS[("Redis 7 主从")]:::store
+      OSS2[("OSS + CDN")]:::store
+      KMS[("KMS")]:::store
+      ACR[("ACR")]:::store
+    end
+  end
+
+  SLB --> HIG
+  HIG -->|mcp.*| MCPGW
+  HIG -->|api.*| CP
+  HIG -->|w-*.ws| WSPOD
+  HIG -->|app-*.apps| APOD
+  HIG -->|dh-*| SFU
+  HIG -. ext-auth .-> AUTH
+  MCPGW --> MGW
+  MCPGW --> RDS
+  MCPGW --> REDIS
+  MCPGW --> KMS
+  CP --> RDS
+  CP --> REDIS
+  WF --> TEMP
+  WF --> WSPOD
+  WF --> MCPGW
+  TRIG --> WF
+  WSPOD --> WPV
+  DHW --> GPUP
+  SFU --> DHW
+  WSPOD --> OSS2
+  APOD --> ACR
+  EVAL --> ACR
+  CP --> OBS
+  MCPGW --> OBS
+  MGW --> OBS

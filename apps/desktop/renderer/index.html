@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenDream Code</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand"><span class="logo">OD</span><div><strong>OpenDream Code</strong><small>本地引擎 · 双引擎桌面端</small></div></div>
+      <span class="badge" id="conn-badge">未连接</span>
+    </header>
+    <main>
+      <section class="hero">
+        <div>
+          <div class="eyebrow">DESKTOP ENGINE</div>
+          <h1>本地编码，云端同源</h1>
+          <p>模型来自云端模型中心（经控制面代理，本机不落 Key），MCP 自动安装；本地文件、终端与 Git 全程在本机。桌面端不包含应用中心。</p>
+        </div>
+        <div class="engine-state"><span id="engine-dot"></span><span id="engine-text">本地引擎未启动</span></div>
+      </section>
+
+      <section class="card setup">
+        <h2>1. 连接云端</h2>
+        <p class="muted">在控制台「门户 → 生成配对码」，配对后自动同步模型与 MCP。</p>
+        <div class="grid">
+          <label>云端地址<input id="api-url" value="http://localhost:4000" /></label>
+          <label>配对码<input id="pair-code" placeholder="OD-XXXX-XXXX" autocomplete="off" /></label>
+          <label class="wide">本地项目目录
+            <div class="row"><input id="workspace" placeholder="选择或输入本地目录" /><button class="ghost" id="pick-dir">选择</button></div>
+          </label>
+        </div>
+        <div class="actions">
+          <button class="primary" id="pair">连接并配对</button>
+          <button id="sync" disabled>同步模型与 MCP</button>
+        </div>
+      </section>
+
+      <section class="card" id="sync-result" hidden>
+        <h2>2. 云端配置已就绪</h2>
+        <div class="meta">
+          <div><span class="muted">默认模型</span><strong id="default-model">—</strong></div>
+          <div><span class="muted">配置文件</span><code id="config-file">—</code></div>
+        </div>
+        <div class="chips" id="models"></div>
+        <div class="chips" id="mcp"></div>
+      </section>
+
+      <section class="card">
+        <h2>3. 启动本地引擎</h2>
+        <p class="muted">使用本机 opencode 启动本地工作台；首次启动会自动通过 npx 安装已选 MCP。</p>
+        <div class="actions">
+          <button class="primary" id="start" disabled>启动本地引擎</button>
+          <button id="open-local" disabled>打开本地工作台</button>
+        </div>
+      </section>
+
+      <section class="log" id="log" aria-live="polite"></section>
+    </main>
+    <script src="./renderer.js"></script>
+  </body>
+</html>

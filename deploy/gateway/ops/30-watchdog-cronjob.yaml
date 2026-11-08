@@ -1,0 +1,72 @@
+# Watchdog（Phase 1 只读诊断；Phase 2/3 见 AI-GATEWAY.md §7.3）
+# 每 2 分钟检查网关/MCP/模型/证书/队列，输出结构化事件（不自动修改）。
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: gateway-watchdog
+  namespace: higress-system
+  labels: { app.kubernetes.io/part-of: opendream-cloud, opencode.cloud/role: watchdog }
+spec:
+  schedule: "*/2 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 90
+      template:
+        spec:
+          serviceAccountName: gateway-watchdog
+          restartPolicy: Never
+          automountServiceAccountToken: true
+          securityContext: { runAsNonRoot: true, runAsUser: 65532, seccompProfile: { type: RuntimeDefault } }
+          containers:
+            - name: watchdog
+              image: registry.cn-beijing.aliyuncs.com/opencode-prod/watchdog:0.1.0
+              command: ["/watchdog/run.sh"]
+              env:
+                - { name: WATCHDOG_MODE, value: "readonly" }          # readonly | suggest | auto（P2）
+                - { name: CONTROL_PLANE_URL, value: "http://control-plane.opencode-control.svc:4000" }
+                - { name: GATEWAY_NAMESPACE, value: "higress-system" }
+                - { name: ALERT_WEBHOOK, valueFrom: { secretKeyRef: { name: watchdog-webhook, key: url } } }
+                - { name: AUDIT_QUEUE_MAX_DEPTH, value: "10000" }
+              resources:
+                requests: { cpu: 50m, memory: 64Mi }
+                limits: { cpu: 200m, memory: 128Mi }
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
+              volumeMounts: [{ name: tmp, mountPath: /tmp }]
+          volumes: [{ name: tmp, emptyDir: { sizeLimit: 64Mi } }]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: gateway-watchdog, namespace: higress-system }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: { name: gateway-watchdog-readonly, namespace: higress-system }
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["gateway.networking.k8s.io"]
+    resources: ["gateways", "httproutes", "gatewayclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["cert-manager.io"]
+    resources: ["certificates"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["extensions.higress.io"]
+    resources: ["wasmplugins"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { name: gateway-watchdog-readonly, namespace: higress-system }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: Role, name: gateway-watchdog-readonly }
+subjects: [{ kind: ServiceAccount, name: gateway-watchdog, namespace: higress-system }]

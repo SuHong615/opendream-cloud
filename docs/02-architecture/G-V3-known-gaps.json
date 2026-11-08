@@ -1,0 +1,540 @@
+{
+  "generated_at": "2026-11-08",
+  "source": "openapi 1.1.0 frozen",
+  "note": "G-V3 gate 允许的 known gaps（非 V3 P0/P1）；每项需对应 M2/M3 任务；P0 端点不得列入",
+  "missing": [
+    {
+      "operationId": "listMcpServerChannels",
+      "method": "GET",
+      "path": "/api/v1/mcp-servers/{serverId}/channels",
+      "milestone": "M2",
+      "status": "closed",
+      "owner_task": "task-35 (MCP 管理端点)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "setMcpServerChannel",
+      "method": "PUT",
+      "path": "/api/v1/mcp-servers/{serverId}/channels/{channel}",
+      "milestone": "M2",
+      "status": "closed",
+      "owner_task": "task-35 (MCP 管理端点)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "listMcpServerTools",
+      "method": "GET",
+      "path": "/api/v1/mcp-servers/{serverId}/tools",
+      "milestone": "M2",
+      "status": "closed",
+      "owner_task": "task-35 (MCP 管理端点)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "getMcpServerVersion",
+      "method": "GET",
+      "path": "/api/v1/mcp-servers/{serverId}/versions/{versionId}",
+      "milestone": "M2",
+      "status": "closed",
+      "owner_task": "task-35 (MCP 管理端点)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "publishMcpServerVersion",
+      "method": "POST",
+      "path": "/api/v1/mcp-servers/{serverId}/versions/{versionId}/publish",
+      "milestone": "M2",
+      "status": "closed",
+      "owner_task": "task-35 (MCP 管理端点)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "reviewMcpServerVersion",
+      "method": "POST",
+      "path": "/api/v1/mcp-servers/{serverId}/versions/{versionId}/review",
+      "milestone": "M2",
+      "status": "closed",
+      "owner_task": "task-35 (MCP 管理端点)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "submitMcpServerVersionReview",
+      "method": "POST",
+      "path": "/api/v1/mcp-servers/{serverId}/versions/{versionId}/submit-review",
+      "milestone": "M2",
+      "status": "closed",
+      "owner_task": "task-35 (MCP 管理端点)",
+      "note": "implemented in M2-backlog batch (control-plane/auth)",
+      "closed_at": "2026-11-08T19:04:37+08:00"
+    },
+    {
+      "operationId": "yankMcpServerVersion",
+      "method": "POST",
+      "path": "/api/v1/mcp-servers/{serverId}/versions/{versionId}/yank",
+      "milestone": "M2",
+      "status": "closed",
+      "owner_task": "task-35 (MCP 管理端点)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "rotateApiKey",
+      "method": "POST",
+      "path": "/api/v1/api-keys/{keyId}",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "createAuditExport",
+      "method": "POST",
+      "path": "/api/v1/audit-logs/exports",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "handleOidcCallback",
+      "method": "GET",
+      "path": "/api/v1/auth/callback",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "beginLogin",
+      "method": "GET",
+      "path": "/api/v1/auth/login",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "refreshSession",
+      "method": "POST",
+      "path": "/api/v1/auth/refresh",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "subscribeEvents",
+      "method": "GET",
+      "path": "/api/v1/events",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "deleteModelPolicy",
+      "method": "DELETE",
+      "path": "/api/v1/model-policies/{policyId}",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "listOrgs",
+      "method": "GET",
+      "path": "/api/v1/orgs",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "createOrg",
+      "method": "POST",
+      "path": "/api/v1/orgs",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "getOrg",
+      "method": "GET",
+      "path": "/api/v1/orgs/{orgId}",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "updateOrg",
+      "method": "PATCH",
+      "path": "/api/v1/orgs/{orgId}",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "listMembers",
+      "method": "GET",
+      "path": "/api/v1/orgs/{orgId}/members",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T10:56:28+08:00"
+    },
+    {
+      "operationId": "inviteMember",
+      "method": "POST",
+      "path": "/api/v1/orgs/{orgId}/members",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T10:56:28+08:00"
+    },
+    {
+      "operationId": "removeMember",
+      "method": "DELETE",
+      "path": "/api/v1/orgs/{orgId}/members/{memberId}",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T10:56:28+08:00"
+    },
+    {
+      "operationId": "updateMember",
+      "method": "PATCH",
+      "path": "/api/v1/orgs/{orgId}/members/{memberId}",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T10:56:28+08:00"
+    },
+    {
+      "operationId": "listQuotaRequests",
+      "method": "GET",
+      "path": "/api/v1/quota-requests",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "createQuotaRequest",
+      "method": "POST",
+      "path": "/api/v1/quota-requests",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "listQuotas",
+      "method": "GET",
+      "path": "/api/v1/quotas",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "createUsageExport",
+      "method": "POST",
+      "path": "/api/v1/usage/exports",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "getUsageExport",
+      "method": "GET",
+      "path": "/api/v1/usage/exports/{exportId}",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "restoreWorkspaceSnapshot",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspaceId}/restore",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "retryWorkspaceLaunch",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspaceId}/retry",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "listWorkspaceSnapshots",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspaceId}/snapshots",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "createWorkspaceSnapshot",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspaceId}/snapshots",
+      "milestone": "M2-backlog",
+      "status": "closed",
+      "owner_task": "M2 backlog（未排期）",
+      "closed_at": "2026-11-08T19:04:37+08:00",
+      "note": "implemented in M2-backlog batch (control-plane/auth)"
+    },
+    {
+      "operationId": "createDhEmbedToken",
+      "method": "POST",
+      "path": "/api/v1/dh/embed-tokens",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-39 (digital-human L1)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "listDhRenderJobs",
+      "method": "GET",
+      "path": "/api/v1/dh/render-jobs",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-39 (digital-human L1)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "createDhRenderJob",
+      "method": "POST",
+      "path": "/api/v1/dh/render-jobs",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-39 (digital-human L1)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "getDhRenderJob",
+      "method": "GET",
+      "path": "/api/v1/dh/render-jobs/{jobId}",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-39 (digital-human L1)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "listDhSessions",
+      "method": "GET",
+      "path": "/api/v1/dh/sessions",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-39 (digital-human L1)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "createDhSession",
+      "method": "POST",
+      "path": "/api/v1/dh/sessions",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-39 (digital-human L1)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "endDhSession",
+      "method": "DELETE",
+      "path": "/api/v1/dh/sessions/{sessionId}",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-39 (digital-human L1)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "getDhSession",
+      "method": "GET",
+      "path": "/api/v1/dh/sessions/{sessionId}",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-39 (digital-human L1)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "sendDhTextInput",
+      "method": "POST",
+      "path": "/api/v1/dh/sessions/{sessionId}/input",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-39 (digital-human L1)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "listHumanTasks",
+      "method": "GET",
+      "path": "/api/v1/human-tasks",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-37 (workflow-engine MVP)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "decideHumanTask",
+      "method": "POST",
+      "path": "/api/v1/human-tasks/{taskId}/decision",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-37 (workflow-engine MVP)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "listWorkflowDefinitions",
+      "method": "GET",
+      "path": "/api/v1/workflow-definitions",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-37 (workflow-engine MVP)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "createWorkflowDefinition",
+      "method": "POST",
+      "path": "/api/v1/workflow-definitions",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-37 (workflow-engine MVP)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "getWorkflowDefinition",
+      "method": "GET",
+      "path": "/api/v1/workflow-definitions/{definitionId}",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-37 (workflow-engine MVP)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "updateWorkflowDefinition",
+      "method": "PATCH",
+      "path": "/api/v1/workflow-definitions/{definitionId}",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-37 (workflow-engine MVP)",
+      "closed_at": "2026-11-08T10:47:36+08:00"
+    },
+    {
+      "operationId": "listWorkflowVersions",
+      "method": "GET",
+      "path": "/api/v1/workflow-definitions/{definitionId}/versions",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-37 (workflow-engine MVP)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "createWorkflowVersion",
+      "method": "POST",
+      "path": "/api/v1/workflow-definitions/{definitionId}/versions",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-37 (workflow-engine MVP)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "listWorkflowInstances",
+      "method": "GET",
+      "path": "/api/v1/workflow-instances",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-37 (workflow-engine MVP)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "startWorkflowInstance",
+      "method": "POST",
+      "path": "/api/v1/workflow-instances",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-37 (workflow-engine MVP)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "getWorkflowInstance",
+      "method": "GET",
+      "path": "/api/v1/workflow-instances/{instanceId}",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-37 (workflow-engine MVP)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "cancelWorkflowInstance",
+      "method": "POST",
+      "path": "/api/v1/workflow-instances/{instanceId}/cancel",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-37 (workflow-engine MVP)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "listWorkflowEvents",
+      "method": "GET",
+      "path": "/api/v1/workflow-instances/{instanceId}/events",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-37 (workflow-engine MVP)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "signalWorkflowInstance",
+      "method": "POST",
+      "path": "/api/v1/workflow-instances/{instanceId}/signal",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-37 (workflow-engine MVP)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    },
+    {
+      "operationId": "getWorkflowVersion",
+      "method": "GET",
+      "path": "/api/v1/workflow-versions/{versionId}",
+      "milestone": "M3",
+      "status": "closed",
+      "owner_task": "task-37 (workflow-engine MVP)",
+      "closed_at": "2026-11-08T10:30:52+08:00"
+    }
+  ],
+  "updated_at": "2026-11-08T19:04:37+08:00",
+  "status_note": "M2/M3 实现中（task-35/37/39）；完成并通过 G-V4 测试后逐项标 closed 并移出本台账。P0/P1 端点不得列入。",
+  "summary": {
+    "total": 56,
+    "closed": 56,
+    "open": 0,
+    "by_milestone_open": {}
+  }
+}

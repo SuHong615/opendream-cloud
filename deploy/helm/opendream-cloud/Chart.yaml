@@ -1,0 +1,10 @@
+apiVersion: v2
+name: opendream-cloud
+description: OpenDream Cloud 平台 Chart（控制面 + workspace-operator + 网关 + 配额基线）
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.28.0-0"
+keywords: [opencode, kubernetes, ai-agent, workspace]
+maintainers:
+  - name: opendream-cloud infra

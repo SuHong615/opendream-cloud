@@ -1,0 +1,32 @@
+sequenceDiagram
+  autonumber
+  participant U as 编辑者
+  participant C as Console（协同面板）
+  participant CL as Collab Service
+  participant WS as opencode Workspace（Agent）
+  participant G as Git（collab 分支）
+  participant AP as 审批人
+  participant CI as CI/构建
+  participant RT as App Runtime
+
+  U->>C: 打开协同修改（描述需求）
+  C->>CL: 创建 collab session（app_id + base_version）
+  CL->>WS: 启动 Agent 任务（读应用仓库）
+  WS->>G: checkout collab/<session>（base commit）
+  WS->>G: 提交 patch（commit + diff）
+  WS-->>CL: 提案（diff/影响文件/风险/测试建议）
+  CL-->>C: proposal_created（SSE 推送）
+  AP->>C: 打开 diff 预览
+  alt 批准
+    AP->>CL: approve（强制双人，若高风险）
+    CL->>G: rebase 到最新 base + merge
+    CL->>CI: 触发构建/测试/安全扫描
+    CI-->>CL: 门禁结果
+    CL->>RT: 部署预览环境（子域 + ticket）
+    CL->>RT: 发布新版本（可回滚）
+    CL-->>C: merged + build_status（SSE）
+  else 要求修改/拒绝
+    AP->>CL: request_changes（评论）
+    CL->>WS: 继续对话/重新生成 patch
+  end
+  Note over CL: base_version 乐观锁：提交时不匹配返回 409 collab_base_moved<br/>同一 app 同时仅一个 pending proposal 可合并

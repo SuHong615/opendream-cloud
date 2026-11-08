@@ -1,0 +1,108 @@
+{
+  "apiVersion": "workflow.opencode.cloud/v1",
+  "kind": "Workflow",
+  "metadata": {
+    "name": "cs-ticket-triage",
+    "version": "1.0.0",
+    "displayName": "客服工单分诊",
+    "description": "WORKFLOW.md §3.8 示例（补齐 model_ref/needs 以符合 v1 schema）"
+  },
+  "spec": {
+    "minRuntimeVersion": "1.0.0",
+    "trigger": {
+      "webhook": { "path": "/hooks/cs-ticket", "secret_ref": "cs_webhook_secret" }
+    },
+    "inputs": {
+      "type": "object",
+      "required": ["ticket_id", "content"],
+      "properties": {
+        "ticket_id": { "type": "string" },
+        "content": { "type": "string" }
+      }
+    },
+    "outputs": {
+      "type": "object",
+      "properties": { "closed": { "type": "boolean" } }
+    },
+    "permissions": {
+      "mcp": ["crm", "kb"],
+      "models": ["default-fast", "default-coding"],
+      "workspaces": [],
+      "apps": []
+    },
+    "nodes": [
+      {
+        "id": "classify",
+        "type": "agent",
+        "name": "工单分类",
+        "model_ref": "default-fast",
+        "input": {
+          "prompt": "你是客服分类器。判断工单类型与优先级：${inputs.content}",
+          "output_schema": {
+            "type": "object",
+            "properties": { "category": { "type": "string" }, "priority": { "type": "string" } }
+          }
+        }
+      },
+      {
+        "id": "check_order",
+        "type": "mcp_tool",
+        "name": "查订单",
+        "needs": ["classify"],
+        "when": "${steps.classify.output.category} == 'order'",
+        "input": { "server": "crm", "tool": "order.lookup", "args": { "ticket_id": "${inputs.ticket_id}" } }
+      },
+      {
+        "id": "answer",
+        "type": "agent",
+        "name": "生成答复",
+        "needs": ["classify", "check_order"],
+        "model_ref": "default-coding",
+        "input": {
+          "prompt": "基于知识库与订单结果回答用户：${inputs.content}；订单：${steps.check_order.output}",
+          "mcp_bindings": ["kb.search"]
+        }
+      },
+      {
+        "id": "need_human",
+        "type": "condition",
+        "name": "是否需要人工",
+        "needs": ["answer"],
+        "cases": [
+          { "when": "${steps.answer.output.confidence} < 0.6", "next": "handoff" }
+        ],
+        "else": "close"
+      },
+      {
+        "id": "handoff",
+        "type": "human_approval",
+        "name": "转人工",
+        "input": {
+          "title": "转人工：${inputs.ticket_id}",
+          "form": { "type": "object", "properties": { "reply": { "type": "string" } } }
+        },
+        "assignee": { "type": "team", "value": "cs-oncall" },
+        "sla": { "due": "30m", "escalateTo": { "type": "role", "value": "cs_lead" } }
+      },
+      {
+        "id": "close",
+        "type": "mcp_tool",
+        "name": "关闭工单",
+        "needs": ["answer", "handoff"],
+        "input": {
+          "server": "crm",
+          "tool": "ticket.close",
+          "args": { "ticket_id": "${inputs.ticket_id}", "reply": "${steps.answer.output.reply}" }
+        },
+        "compensate": "reopen",
+        "retry": { "maxAttempts": 3, "backoff": { "base": "1s", "factor": 2, "jitter": true } }
+      },
+      {
+        "id": "reopen",
+        "type": "mcp_tool",
+        "name": "重开工单（补偿）",
+        "input": { "server": "crm", "tool": "ticket.reopen", "args": { "ticket_id": "${inputs.ticket_id}" } }
+      }
+    ]
+  }
+}

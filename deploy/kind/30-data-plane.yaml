@@ -1,0 +1,145 @@
+# 控制面 + 本地数据面（kind 开发栈；生产用 RDS/Redis + ACK）
+apiVersion: v1
+kind: Secret
+metadata: { name: control-plane-env, namespace: opencode-control }
+type: Opaque
+stringData:
+  DATABASE_URL: postgresql://opencode:opencode@postgres:5432/opencode
+  SESSION_HMAC_SECRET: dev-only-change-me-32bytes-minimum-000
+  APIKEY_PEPPER: dev-only-change-me-32bytes-minimum-000
+  ALLOW_DEV_LOGIN: "1"
+  DESTROY_COOLDOWN_MIN: "5"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: control-plane
+  namespace: opencode-control
+  labels: { app.kubernetes.io/name: control-plane, opencode.cloud/enforce-security: "true" }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: control-plane } }
+  template:
+    metadata: { labels: { app.kubernetes.io/name: control-plane } }
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: control-plane
+          image: opendream-cloud/control-plane:0.1.0
+          ports: [{ name: http, containerPort: 4000 }]
+          env:
+            - { name: CONTROL_PLANE_PORT, value: "4000" }
+            - { name: NODE_ENV, value: production }
+          envFrom: [{ secretRef: { name: control-plane-env } }]
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          startupProbe: { httpGet: { path: /healthz, port: http }, failureThreshold: 30, periodSeconds: 2 }
+          readinessProbe: { httpGet: { path: /healthz, port: http }, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, initialDelaySeconds: 20, periodSeconds: 20 }
+          volumeMounts:
+            - { name: data, mountPath: /app/.data }
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - { name: data, emptyDir: { sizeLimit: 1Gi } }
+        - { name: tmp, emptyDir: { sizeLimit: 256Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: control-plane, namespace: opencode-control }
+spec:
+  selector: { app.kubernetes.io/name: control-plane }
+  ports: [{ name: http, port: 4000, targetPort: 4000 }]
+---
+apiVersion: v1
+kind: Secret
+metadata: { name: postgres-env, namespace: opencode-control }
+type: Opaque
+stringData:
+  POSTGRES_USER: opencode
+  POSTGRES_PASSWORD: opencode
+  POSTGRES_DB: opencode
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: postgres-data, namespace: opencode-control }
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: { requests: { storage: 1Gi } }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: opencode-control
+  labels: { app.kubernetes.io/name: postgres }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: postgres } }
+  template:
+    metadata: { labels: { app.kubernetes.io/name: postgres } }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 999, fsGroup: 999, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports: [{ name: pg, containerPort: 5432 }]
+          env:
+            - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }
+          envFrom: [{ secretRef: { name: postgres-env } }]
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          volumeMounts: [{ name: data, mountPath: /var/lib/postgresql/data }]
+          readinessProbe: { exec: { command: ["pg_isready", "-U", "opencode"] }, periodSeconds: 10 }
+      volumes:
+        - { name: data, persistentVolumeClaim: { claimName: postgres-data } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: postgres, namespace: opencode-control }
+spec:
+  selector: { app.kubernetes.io/name: postgres }
+  ports: [{ name: pg, port: 5432, targetPort: 5432 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: opencode-control
+  labels: { app.kubernetes.io/name: redis }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: redis } }
+  template:
+    metadata: { labels: { app.kubernetes.io/name: redis } }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 999, fsGroup: 999, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          args: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+          ports: [{ name: redis, containerPort: 6379 }]
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 250m, memory: 256Mi }
+          volumeMounts: [{ name: data, mountPath: /data }]
+      volumes:
+        - { name: data, emptyDir: { sizeLimit: 256Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: redis, namespace: opencode-control }
+spec:
+  selector: { app.kubernetes.io/name: redis }
+  ports: [{ name: redis, port: 6379, targetPort: 6379 }]

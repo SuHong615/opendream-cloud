@@ -1,0 +1,38 @@
+name: Bug report
+description: Report a reproducible bug in OpenDream Cloud
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！请先搜索已有 Issue。当前为 Alpha，请勿提交生产事故。
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: 1. ... 2. ... 3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果（错误日志/截图）
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本/commit
+      placeholder: v0.1.0-alpha / commit
+  - type: dropdown
+    id: area
+    attributes:
+      label: 模块
+      options: [console, control-plane, model-center, mcp, skill, app-center, workflow, agent-workforce, eval, experiment, memory, deploy, docs, other]

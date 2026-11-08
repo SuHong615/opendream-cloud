@@ -1,0 +1,86 @@
+# 本地 Envoy（可选 profile）：验证 Host 路由 / header 删除 / SSE 不缓冲
+# 使用：docker compose ... --profile envoy up -d，然后访问 http://api.localhost:8081 等
+static_resources:
+  listeners:
+    - name: ingress
+      address: { socket_address: { address: 0.0.0.0, port_value: 8080 } }
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: ingress_http
+                use_remote_address: true
+                stream_idle_timeout: 3600s
+                request_timeout: 3600s
+                http_filters:
+                  # 先删除客户端注入的租户/用户头（与生产 gateway 一致）
+                  - name: envoy.filters.http.header_mutation
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.header_mutation.v3.HeaderMutation
+                      mutations:
+                        request_mutations:
+                          - remove: X-OC-Tenant
+                          - remove: X-OC-User
+                          - remove: X-Forwarded-User
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+                route_config:
+                  name: local_routes
+                  virtual_hosts:
+                    - name: api
+                      domains: ["api.localhost", "api.localhost:8081"]
+                      routes:
+                        - match: { prefix: "/" }
+                          route: { cluster: control_plane, timeout: 300s }
+                    - name: mcp
+                      domains: ["mcp.localhost", "mcp.localhost:8081"]
+                      routes:
+                        # /mcp/* → mcp-hub，前缀重写；纯反代，不做工具策略
+                        - match: { prefix: "/mcp/" }
+                          route: { cluster: mcp_hub, prefix_rewrite: "/", timeout: 300s }
+                    - name: llm
+                      domains: ["llm.localhost", "llm.localhost:8081"]
+                      routes:
+                        - match: { prefix: "/" }
+                          route: { cluster: mock_model, timeout: 300s }
+                    - name: workspaces
+                      domains: ["*.ws.localhost", "*.ws.localhost:8081"]
+                      routes:
+                        - match: { prefix: "/" }
+                          route: { cluster: workspace, timeout: 3600s }
+                    - name: default
+                      domains: ["*"]
+                      routes:
+                        - match: { prefix: "/" }
+                          direct_response: { status: 404, body: { inline_string: "{\"error\":{\"code\":\"not_found\"}}" } }
+
+  clusters:
+    - name: control_plane
+      connect_timeout: 2s
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: control_plane
+        endpoints: [{ lb_endpoints: [{ endpoint: { address: { socket_address: { address: control-plane, port_value: 4000 } } } }] }]
+    - name: mcp_hub
+      connect_timeout: 2s
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: mcp_hub
+        endpoints: [{ lb_endpoints: [{ endpoint: { address: { socket_address: { address: mcp-hub, port_value: 4104 } } } }] }]
+    - name: mock_model
+      connect_timeout: 2s
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: mock_model
+        endpoints: [{ lb_endpoints: [{ endpoint: { address: { socket_address: { address: mock-model, port_value: 9100 } } } }] }]
+    - name: workspace
+      connect_timeout: 2s
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: workspace
+        endpoints: [{ lb_endpoints: [{ endpoint: { address: { socket_address: { address: workspace, port_value: 4096 } } } }] }]
+
+admin:
+  address: { socket_address: { address: 0.0.0.0, port_value: 9901 } }

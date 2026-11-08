@@ -1,0 +1,95 @@
+# 在集群内运行 control-plane（演示：ConfigMap 源码 + bun 镜像内安装依赖；
+# 生产应使用预构建镜像 + PG/Redis + 只读根 + 非 root）。
+apiVersion: v1
+kind: Secret
+metadata:
+  name: control-plane-env
+  namespace: opencode-system
+type: Opaque
+stringData:
+  SESSION_SECRET: "ack-demo-session-secret-please-change"
+  APIKEY_PEPPER: "ack-demo-apikey-pepper-please-change"
+  TICKET_SECRET: "ack-demo-ticket-secret-please-change"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: control-plane
+  namespace: opencode-system
+  labels:
+    app.kubernetes.io/name: control-plane
+    app.kubernetes.io/part-of: opendream-cloud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: control-plane
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: control-plane
+        app.kubernetes.io/part-of: opendream-cloud
+    spec:
+      containers:
+        - name: control-plane
+          image: docker.m.daocloud.io/oven/bun:1.4.4
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              mkdir -p /work
+              tar xzf /src/src.tgz -C /work
+              cd /work
+              bun install --production --registry https://registry.npmmirror.com
+              bun src/db/migrate.ts || true
+              exec bun src/server.ts
+          env:
+            - { name: NODE_ENV, value: development }
+            - { name: HOST, value: "0.0.0.0" }
+            - { name: PORT, value: "4000" }
+            - { name: DATABASE_PATH, value: /data/control-plane.sqlite }
+            - { name: ALLOW_DEV_LOGIN, value: "1" }
+            - { name: SEED_DEV, value: "1" }
+            - name: SESSION_SECRET
+              valueFrom: { secretKeyRef: { name: control-plane-env, key: SESSION_SECRET } }
+            - name: APIKEY_PEPPER
+              valueFrom: { secretKeyRef: { name: control-plane-env, key: APIKEY_PEPPER } }
+            - name: TICKET_SECRET
+              valueFrom: { secretKeyRef: { name: control-plane-env, key: TICKET_SECRET } }
+          ports:
+            - { containerPort: 4000, name: http }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 15
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 40
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          volumeMounts:
+            - { name: src, mountPath: /src, readOnly: true }
+            - { name: data, mountPath: /data }
+      volumes:
+        - name: src
+          configMap:
+            name: control-plane-src
+        - name: data
+          emptyDir:
+            sizeLimit: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: control-plane
+  namespace: opencode-system
+  labels:
+    app.kubernetes.io/name: control-plane
+    app.kubernetes.io/part-of: opendream-cloud
+spec:
+  selector:
+    app.kubernetes.io/name: control-plane
+  ports:
+    - { name: http, port: 4000, targetPort: http }

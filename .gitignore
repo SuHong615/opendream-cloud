@@ -1,0 +1,68 @@
+﻿# dependencies
+node_modules/
+.pnpm-store/
+.turbo/
+dist/
+build/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# runtime
+.env
+.env.*
+!.env.example
+*.log
+logs/
+tmp/
+.tmp/
+
+# upstream clone (read-only reference, not vendored)
+upstream/
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# runtime data / test artifacts
+.data/
+test-results/
+playwright-report/
+docs/05-delivery/evidence/e2e-report/
+
+# downloaded binaries/tools
+tools/
+test-results/
+
+
+# generated ACK configmaps (rebuild with scripts/ack/package-configmaps.py)
+deploy/ack/*-src-configmap.yaml
+
+
+# local temp / sqlite artifacts
+.tmp-*
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+
+# runtime databases (never commit)
+**/.data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.lost-*
+
+
+# desktop installer is built locally / distributed via release CDN
+apps/console/public/downloads/*.exe
+
+
+# desktop build assets (icon) are source-controlled
+!apps/desktop/build/
+!apps/desktop/build/*
+

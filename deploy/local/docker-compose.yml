@@ -1,0 +1,350 @@
+# Local deployment on Docker (WSL2 engine, all data on D:)
+name: opendream-cloud-local
+
+x-restart: &restart unless-stopped
+
+services:
+  control-plane:
+    build:
+      context: ../..
+      dockerfile: deploy/local/Dockerfile.control-plane
+    image: opendream-cloud/control-plane:local
+    restart: *restart
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "4000"
+      DATABASE_PATH: /data/control-plane.sqlite
+      ALLOW_DEV_LOGIN: "1"
+      OIDC_ENABLED: "1"
+      OIDC_MOCK: "1"
+      OIDC_REDIRECT_URI: http://localhost:4000/api/v1/auth/callback
+      CONSOLE_BASE_URL: http://localhost:3000
+      SEED_DEV: "1"
+      SEED_LEGACY_LITELLM: "0"
+      PUBLIC_BASE_URL: http://localhost:4000
+      WORKSPACE_HOST_SUFFIX: localhost:8080
+      WORKSPACE_URL_SCHEME: http
+      SESSION_SECRET: local-session-secret-change-me
+      APIKEY_PEPPER: local-apikey-pepper-change-me
+      TICKET_SECRET: local-ticket-secret-change-me
+      OPENCODE_CONFIG_OUT: /shared/opencode.json
+      MODEL_PROVIDER_TEST_TIMEOUT_MS: "10000"
+      MODEL_SECRET_KEY: local-model-secret-change-me-32chars
+      MCP_HUB_URL: http://mcp-hub:4104
+      MCP_INTERNAL_TOKEN: local-mcp-internal-token-change-me
+      APP_CENTER_URL: http://app-center:4103
+      EVAL_CENTER_URL: http://eval-center:4102
+      MEMORY_URL: http://memory-service:4107
+      MEMORY_API_KEY: local-memory-key
+      # v3 鏂版湇鍔★紙浠呭唴缃戯紱瀵瑰缁熶竴璧?control-plane 闂ㄩ潰锛岃 AI-GATEWAY.md锛?
+      WORKFLOW_URL: http://workflow-engine:4105
+      AGENT_WORKFORCE_URL: http://agent-workforce:4106
+      MCP_TICKET_PRIVATE_KEY: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUVYa1N4L1dpWHBSeUo5ak9vZ1p5Qy8xVE1UQ3dER24yMktQTHc0VjlUTmUKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=
+      MCP_TICKET_KID: local-kid-1
+      MCP_TICKET_ISSUER: control-plane
+    volumes:
+      - cp-data:/data
+      - oc-config:/shared
+    depends_on:
+      mock-model:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:4000/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # 鏈湴浼佷笟妯″瀷鍗犱綅锛圤penAI 鍏煎锛夛紝鐢ㄤ簬楠岃瘉妯″瀷涓績 鈫?opencode 閰嶇疆 鈫?宸ヤ綔鍖鸿皟鐢?
+  mock-model:
+    build:
+      context: ../..
+      dockerfile: deploy/local/Dockerfile.mock-model
+    image: opendream-cloud/mock-model:local
+    restart: *restart
+    ports:
+      - "9100:9100"
+    environment:
+      PORT: "9100"
+      MOCK_MODEL_API_KEY: sk-mock-key
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:9100/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  console:
+    build:
+      context: ../..
+      dockerfile: deploy/local/Dockerfile.console
+      args:
+        API_PROXY_TARGET: http://control-plane:4000
+    image: opendream-cloud/console:local
+    restart: *restart
+    ports:
+      - "3000:3000"
+    depends_on:
+      control-plane:
+        condition: service_healthy
+
+  skill-center:
+    build:
+      context: ../..
+      dockerfile: deploy/local/Dockerfile.center
+      args:
+        SERVICE: skill-center
+    image: opendream-cloud/skill-center:local
+    restart: *restart
+    ports:
+      - "4101:4101"
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "4101"
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:4101/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  eval-center:
+    build:
+      context: ../..
+      dockerfile: deploy/local/Dockerfile.center
+      args:
+        SERVICE: eval-center
+    image: opendream-cloud/eval-center:local
+    restart: *restart
+    ports:
+      - "4102:4102"
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "4102"
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:4102/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  app-center:
+    build:
+      context: ../..
+      dockerfile: deploy/local/Dockerfile.center
+      args:
+        SERVICE: app-center
+    image: opendream-cloud/app-center:local
+    restart: *restart
+    ports:
+      - "4103:4103"
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "4103"
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:4103/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  mcp-hub:
+    build:
+      context: ../..
+      dockerfile: deploy/local/Dockerfile.center
+      args:
+        SERVICE: mcp-hub
+    image: opendream-cloud/mcp-hub:local
+    restart: *restart
+    ports:
+      - "4104:4104"
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "4104"
+      MCP_TICKET_SECRET: local-mcp-ticket-secret-change-me
+      MCP_TICKET_PUBLIC_KEY: LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQUZqdktGZ3M2cnhxQzh1YURRbVB5ZmQ0N1NiemxwaVNDelk1YTdreEI1Z0E9Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo=
+      MCP_TICKET_KID: local-kid-1
+      MCP_TICKET_ISSUER: control-plane
+      MCP_INTERNAL_TOKEN: local-mcp-internal-token-change-me
+      MCP_HUB_URL: http://mcp-hub:4104
+      CONTROL_PLANE_URL: http://control-plane:4000
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:4104/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # v3 宸ヤ綔娴佸紩鎿庯紙杞婚噺鐘舵€佹満/PG+Redis锛涚敓浜?Temporal锛岃 WORKFLOW.md锛?
+  # 浠呭唴缃戯細瀵瑰 API 缁熶竴缁?control-plane 闂ㄩ潰锛?api/v1/workflows/*锛夛紝涓嶆柊澧炲叕缃戣矾鐢便€?
+  workflow-engine:
+    build:
+      context: ../..
+      dockerfile: deploy/local/Dockerfile.workflow-engine
+    image: opendream-cloud/workflow-engine:local
+    restart: *restart
+    ports:
+      - "4105:4105"
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "4105"
+      CONTROL_PLANE_URL: http://control-plane:4000
+    depends_on:
+      control-plane:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:4105/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # Agent Workforce（数字员工 / 专家小队）：企业应用内的 AI 同事与多 Agent 团队，
+  # 不是短视频虚拟人；对外统一经 control-plane 门面（/api/v1/agent-*）。
+  agent-workforce:
+    build:
+      context: ../..
+      dockerfile: deploy/local/Dockerfile.agent-workforce
+    image: opendream-cloud/agent-workforce:local
+    restart: *restart
+    ports:
+      - "4106:4106"
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "4106"
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:4106/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+  memory-service:
+    build:
+      context: ../..
+      dockerfile: deploy/local/Dockerfile.memory-service
+    image: opendream-cloud/memory-service:local
+    restart: *restart
+    ports:
+      - "4107:4107"
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "4107"
+      MEMORY_API_KEY: local-memory-key
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:4107/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  experiment-center:
+    build:
+      context: ../..
+      dockerfile: deploy/local/Dockerfile.experiment-center
+    image: opendream-cloud/experiment-center:local
+    restart: *restart
+    ports:
+      - "4108:4108"
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "4108"
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:4108/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  workspace:
+    build:
+      context: ../..
+      dockerfile: deploy/local/Dockerfile.workspace
+    image: opendream-cloud/workspace:local
+    restart: *restart
+    ports:
+      - "4096:4096"
+    environment:
+      OPENCODE_SERVER_PASSWORD: Local-Demo-Pass-123
+      OPENCODE_HOSTNAME: 0.0.0.0
+      OPENCODE_PORT: "4096"
+      AGENT_HEALTH_PORT: "8081"
+      WORKSPACE_ID: local-ws
+      OPENCODE_DISABLE_AUTOUPDATE: "1"
+    volumes:
+      - ws-home:/home/opencode
+      - ws-project:/workspace
+      - oc-config:/home/opencode/.config/opencode
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:8081/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+
+  # 鏈湴宸ヤ綔鍖虹綉鍏筹細娴忚鍣ㄨ闂?http://w-<id>.localhost:8080/锛?.localhost 鑷姩瑙ｆ瀽鍒?127.0.0.1锛?
+  gateway:
+    build:
+      context: ../..
+      dockerfile: deploy/local/Dockerfile.local-gateway
+    image: opendream-cloud/local-gateway:local
+    restart: *restart
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      WORKSPACE_URL: http://workspace:4096
+      MCP_HUB_URL: http://mcp-hub:4104
+      WORKSPACE_PASSWORD: Local-Demo-Pass-123
+    depends_on:
+      workspace:
+        condition: service_healthy
+      mcp-hub:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:8080/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    profiles: ["onprem"]
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: *restart
+
+  nats:
+    image: nats:2.10-alpine
+    profiles: ["onprem"]
+    command: ["-js", "-m", "8222"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    restart: *restart
+
+  minio:
+    image: minio/minio:latest
+    profiles: ["onprem"]
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: opendream
+      MINIO_ROOT_PASSWORD: opendream-minio-change-me
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    restart: *restart
+
+volumes:
+  cp-data:
+  oc-config:
+  ws-home:
+  ws-project:
+  minio-data:
+  redis-data:
+
+

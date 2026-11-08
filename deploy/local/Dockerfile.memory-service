@@ -1,0 +1,14 @@
+# Build context: repo root
+# v3 memory-service（4107）：评测/可观测代理与记忆存储接口；仅内网，对外经 control-plane 门面
+# （/api/v1/memory/*）。健康检查 /healthz。
+FROM docker.m.daocloud.io/oven/bun:1.4.4
+WORKDIR /work
+COPY packages/shared ./packages/shared
+COPY services/memory-service ./services/memory-service
+WORKDIR /work/services/memory-service
+RUN bun install --production --registry https://registry.npmmirror.com
+ENV NODE_ENV=development HOST=0.0.0.0 PORT=4107
+EXPOSE 4107
+HEALTHCHECK --interval=10s --timeout=5s --retries=12 \
+  CMD bun -e "fetch('http://127.0.0.1:4107/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["bun", "src/server.ts"]

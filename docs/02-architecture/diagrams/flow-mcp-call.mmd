@@ -1,0 +1,28 @@
+sequenceDiagram
+  autonumber
+  participant OC as opencode Workspace
+  participant HG as Higress（接入层）
+  participant MG as mcp-gateway（数据面 PEP）
+  participant RG as MCP Registry/Policy（控制面）
+  participant KM as KMS
+  participant UP as 企业 MCP Server
+  participant OB as OTel/审计
+
+  OC->>HG: POST https://mcp.example.com/v1/acme/crm<br/>Bearer workspace-ticket
+  HG->>HG: TLS/WAF/租户路由 + 粗限流
+  HG->>MG: 转发（mTLS，保留原 Host/请求头）
+  MG->>MG: 验 ticket（JWKS 本地，aud=mcp:org:acme）
+  MG->>RG: 策略查询（租户/角色/应用/工具/版本）
+  RG-->>MG: allow + tool_snapshot + credential_ref
+  alt 未授权工具
+    MG-->>OC: MCP error -32001 forbidden
+    MG->>OB: audit mcp.tool.denied
+  else 已授权
+    MG->>KM: 解密凭证（信封加密，仅内存）
+    MG->>UP: initialize / tools/call（注入凭证，超时+熔断）
+    UP-->>MG: result（流式）
+    MG->>MG: 脱敏 + 大小上限 + 缓存判定
+    MG->>OB: audit mcp.tool.call + trace span
+    MG-->>OC: result（streamable HTTP / SSE）
+  end
+  Note over OC,MG: 工具清单 tools/list 在网关侧按 binding 过滤<br/>未授权工具对 opencode 不可见

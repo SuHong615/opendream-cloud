@@ -1,0 +1,57 @@
+# Higress on ACK：Helm values（版本/镜像/副本/资源/SLB/HPA）
+# 使用：helm upgrade --install higress higress.io/higress -n higress-system -f 本文件
+# 注意：版本与镜像 digest 必须锁定；以下为占位，T7 用实际 chart 版本回填。
+global:
+  namespace: higress-system
+  # 生产必须开启 mTLS/严格鉴权（以 chart 支持为准）
+  mcpServer:
+    enabled: true
+
+gateway:
+  name: higress-gateway
+  replicaCount: 3
+  image:
+    repository: higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/gateway
+    tag: "2.2.4"
+    digest: ""                    # 生产必填 sha256:...
+  resources:
+    requests: { cpu: "2", memory: "4Gi" }
+    limits: { cpu: "4", memory: "8Gi" }
+  autoscaling:
+    enabled: false                # 使用独立 HPA（ops/10-hpa-pdb.yaml）便于按连接数扩缩
+  podDisruptionBudget:
+    enabled: false                # 使用 ops/10-hpa-pdb.yaml
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels: { app.kubernetes.io/name: higress-gateway }
+  service:
+    type: LoadBalancer
+    annotations:
+      service.beta.kubernetes.io/alicloud-loadbalancer-address-type: internet
+      service.beta.kubernetes.io/alicloud-loadbalancer-charge-type: paybytraffic
+      service.beta.kubernetes.io/alicloud-loadbalancer-bandwidth: "500"
+  # 长连接/SSE 调优（按实际 chart 参数名）
+  config:
+    proxyBufferSize: "32k"
+    proxyBuffers: "4 32k"
+    proxyBusyBuffersSize: "64k"
+    workerConnections: "65535"
+    proxyReadTimeout: "3600s"
+    proxySendTimeout: "3600s"
+
+controller:
+  replicaCount: 2
+  resources:
+    requests: { cpu: 500m, memory: 512Mi }
+    limits: { cpu: "1", memory: "1Gi" }
+
+console:
+  enabled: false                  # 生产不暴露 Higress Console（或仅内网 + SSO）
+
+nodeSelector:
+  dedicated: gateway
+tolerations:
+  - { key: dedicated, operator: Equal, value: gateway, effect: NoSchedule }

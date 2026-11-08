@@ -1,0 +1,72 @@
+# 弹性与可用性：HPA + PDB（Higress / MCP Gateway / LiteLLM）
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: higress-gateway
+  namespace: higress-system
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: higress-gateway }
+  minReplicas: 3
+  maxReplicas: 6
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies: [{ type: Percent, value: 25, periodSeconds: 60 }]
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies: [{ type: Percent, value: 100, periodSeconds: 30 }]
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 60 } }
+    - type: Pods
+      pods:
+        metric: { name: higress_connections_active }
+        target: { type: AverageValue, averageValue: "8000" }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: higress-gateway
+  namespace: higress-system
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: higress-gateway
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: mcp-gateway
+  namespace: opencode-gateway
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: mcp-gateway }
+  minReplicas: 3
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 60 } }
+  behavior:
+    scaleDown: { stabilizationWindowSeconds: 300 }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: mcp-gateway
+  namespace: opencode-gateway
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mcp-gateway
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: litellm
+  namespace: opencode-gateway
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: litellm

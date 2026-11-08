@@ -1,0 +1,51 @@
+# 参考模板：operator 生成的工作区 Pod 期望形态（不参与 kubectl apply；validate-manifests 用它断言 4C8G/非 root/只读根）
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ws-template
+  namespace: ws-org-demo
+  labels:
+    app.kubernetes.io/name: opencode-workspace
+    opencode.cloud/template: workspace
+spec:
+  automountServiceAccountToken: false
+  terminationGracePeriodSeconds: 60
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile: { type: RuntimeDefault }
+  containers:
+    - name: workspace
+      image: opendream-cloud/workspace-runtime@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      command: ["/usr/local/bin/opendream-cloud-entrypoint"]
+      ports:
+        - { name: http, containerPort: 4096 }
+        - { name: agent-health, containerPort: 8081 }
+      env:
+        - { name: OPENCODE_HOSTNAME, value: "0.0.0.0" }
+        - { name: OPENCODE_PORT, value: "4096" }
+        - name: OPENCODE_SERVER_PASSWORD
+          valueFrom: { secretKeyRef: { name: ws-demo-auth, key: OPENCODE_SERVER_PASSWORD } }
+      resources:
+        # 4C8G：requests=limits（Guaranteed QoS）
+        requests: { cpu: "4", memory: "8Gi", ephemeral-storage: "2Gi" }
+        limits: { cpu: "4", memory: "8Gi", ephemeral-storage: "2Gi" }
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities: { drop: ["ALL"] }
+      startupProbe: { httpGet: { path: /startupz, port: agent-health }, periodSeconds: 2, failureThreshold: 45 }
+      readinessProbe: { httpGet: { path: /healthz, port: agent-health }, periodSeconds: 5, failureThreshold: 3 }
+      livenessProbe: { httpGet: { path: /livez, port: agent-health }, initialDelaySeconds: 120, periodSeconds: 20 }
+      volumeMounts:
+        - { name: home, mountPath: /home/opencode, subPath: home }
+        - { name: home, mountPath: /workspace, subPath: workspace }
+        - { name: config, mountPath: /etc/opencode }
+        - { name: tmp, mountPath: /tmp }
+  volumes:
+    - name: home
+      persistentVolumeClaim: { claimName: ws-demo-home }
+    - { name: config, emptyDir: { sizeLimit: 64Mi } }
+    - { name: tmp, emptyDir: { sizeLimit: 2Gi } }

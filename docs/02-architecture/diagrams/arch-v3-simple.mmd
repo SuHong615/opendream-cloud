@@ -1,0 +1,85 @@
+flowchart TB
+  U["用户 / IM / 企业系统"] --> L0
+
+  subgraph L0["L0 统一 AI 网关（Higress 默认 / agentgateway 可选）"]
+    direction LR
+    GW["TLS·WAF<br/>OIDC / APIKey<br/>租户路由"]:::gw
+    ROUTE["模型路由<br/>MCP 入口<br/>限流 / 缓存"]:::gw
+    OBSG["审计 / Trace<br/>灰度 / 降级"]:::gw
+  end
+
+  L0 --> L1
+
+  subgraph L1["L1 控制面（Control Plane）"]
+    direction LR
+    IDP["Identity<br/>Tenant / RBAC"]:::cp
+    REG["MCP Registry<br/>生命周期 / 版本 / 审核"]:::core
+    POL["MCP Policy<br/>工具级 allow/deny / 配额"]:::core
+    MC["Model Center<br/>企业模型 / Key 加密"]:::cp
+    AC["App Center<br/>权限 / 分享 / 协同"]:::core
+    WF["Workflow Engine<br/>SDLC / 通用模板"]:::cp
+    DH["Digital Human<br/>形象 / 音色 / RTC"]:::cp
+    OBS["Audit / Usage<br/>Billing / Watchdog"]:::cp
+  end
+
+  L1 --> L2
+
+  subgraph L2["L2 数据面（Data Plane）"]
+    direction LR
+    MCPGW["MCP Gateway<br/>HTTP/SSE/stdio · 凭证注入<br/>工具级 PEP · 熔断 · 缓存"]:::core
+    MODELGW["Model Gateway<br/>LiteLLM / 企业模型<br/>虚拟 Key · 成本"]:::dp
+    APPGW["App / Workspace<br/>Ingress · 票据"]:::dp
+  end
+
+  MCPGW --> EXT["企业 MCP Server<br/>内部 API / SaaS / DB"]:::ext
+  MODELGW --> MODELS["企业模型网关<br/>第三方模型"]:::ext
+
+  L2 --> L3
+
+  subgraph L3["L3 执行层（Runtime）"]
+    direction LR
+    WS["opencode Workspace<br/>4C8G · PVC · Agent"]:::rt
+    APP["App Runtime<br/>1C2G · Web/Agent"]:::rt
+    WFW["Workflow Worker<br/>持久化 / 人工任务"]:::rt
+    DHR["Digital Human Runtime<br/>ASR/TTS/口型/RTC/GPU"]:::rt
+  end
+
+  L3 --> L4
+
+  subgraph L4["L4 业务层（Business）"]
+    direction LR
+    APPS["应用中心<br/>Web / Agent / 数字人 / 工作流"]:::biz
+    SDLC["SDLC 工作流<br/>需求→设计→开发→测试→发布→运维"]:::biz
+    GEN["通用工作流<br/>客服 / 审批 / 数据 / 运维"]:::biz
+    DHAPI["数字人对外 API<br/>SDK / iframe / Webhook"]:::biz
+  end
+
+  APPS --> U
+  DHAPI --> U
+
+  REG -. 发布/健康 .-> MCPGW
+  POL -. 策略/限流 .-> MCPGW
+  MC -. 配置下发 .-> WS
+  AC -. 协同会话 .-> WS
+  WF -. 任务/事件 .-> WFW
+  DH -. 资产/编排 .-> DHR
+  APPGW --> WS
+  WS --> APPS
+  APP --> APPS
+  WFW --> SDLC
+  WFW --> GEN
+  DHR --> DHAPI
+
+  classDef gw fill:#eef2ff,stroke:#4f46e5,color:#1e1b4b,stroke-width:1.5px
+  classDef cp fill:#ecfeff,stroke:#0891b2,color:#164e63,stroke-width:1.2px
+  classDef core fill:#fef2f2,stroke:#dc2626,color:#7f1d1d,stroke-width:1.8px
+  classDef dp fill:#f0fdf4,stroke:#16a34a,color:#14532d,stroke-width:1.2px
+  classDef rt fill:#fff7ed,stroke:#ea580c,color:#7c2d12,stroke-width:1.2px
+  classDef biz fill:#fdf2f8,stroke:#db2777,color:#831843,stroke-width:1.2px
+  classDef ext fill:#f3f4f6,stroke:#6b7280,color:#111827,stroke-width:1px
+
+  style L0 fill:#eef2ff,stroke:#4f46e5,color:#1e1b4b
+  style L1 fill:#ecfeff,stroke:#0891b2,color:#164e63
+  style L2 fill:#f0fdf4,stroke:#16a34a,color:#14532d
+  style L3 fill:#fff7ed,stroke:#ea580c,color:#7c2d12
+  style L4 fill:#fdf2f8,stroke:#db2777,color:#831843

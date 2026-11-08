@@ -1,0 +1,32 @@
+sequenceDiagram
+  autonumber
+  participant T as Trigger（IM/Git/CI/Webhook/定时）
+  participant BUS as Trigger Bus（Redis Streams→NATS）
+  participant WF as Workflow Control（Router）
+  participant RT as Workflow Runtime（MVP 状态机 / Temporal）
+  participant W as opencode Workspace（Agent）
+  participant MG as MCP Gateway（工具）
+  participant H as 人工审批（human_tasks）
+  participant AC as App Center（发布）
+  participant OB as 审计/回放
+
+  T->>BUS: 事件（event_id/type/tenant/thread_id/payload）
+  BUS->>WF: 消费（按 thread_id 保序 + event_id 幂等）
+  WF->>WF: 匹配 workflow + DSL 版本（不可变）
+  WF->>RT: start（WorkflowRuntime.start）
+  RT->>W: agent 节点（Agent 任务，工作区 API）
+  W-->>RT: 产物（PR/代码/报告）
+  RT->>MG: mcp_tool 节点（工具调用，含策略）
+  MG-->>RT: 结果（审计）
+  RT->>H: human_approval 节点（SLA/升级）
+  H-->>RT: decision（Signal/completeHumanTask）
+  alt 通过
+    RT->>AC: 发布节点（构建/部署）
+    AC-->>RT: 部署结果
+    RT->>OB: workflow_events（append-only）
+    RT-->>WF: succeeded
+  else 驳回或超时
+    RT->>RT: 补偿（逆序 Saga）→ failed / waiting_human
+    RT->>OB: dead letter + 审计
+  end
+  Note over RT: 幂等键 workflow_id/run_id/activity_id/attempt<br/>取消级联到 opencode session / MCP / 部署

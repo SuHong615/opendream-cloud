@@ -1,0 +1,44 @@
+# 入口 Token 限流（粗粒度保护；预算/计费权威在 LiteLLM）
+apiVersion: extensions.higress.io/v1alpha1
+kind: WasmPlugin
+metadata:
+  name: ai-token-ratelimit
+  namespace: higress-system
+  labels: { app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  url: oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-token-ratelimit:2.2.4
+  phase: UNSPECIFIED_PHASE
+  priority: 240
+  matchRules:
+    - ingress:
+        - higress-system/higress-public
+      config:
+        # Redis 共享计数（与 MCP Gateway/LiteLLM 共用实例，前缀隔离）
+        redis:
+          serviceName: redis.opencode-control.svc.cluster.local
+          port: 6379
+          timeout: 3000
+          keyPrefix: "gw:tok:"
+        rules:
+          # 租户维度：入口保护阈值高于 LiteLLM 预算（如 120%），避免抢跑计费
+          - name: tenant-token-limit
+            match:
+              header:
+                X-OC-Tenant: "*"
+            limit:
+              tokens: 2000000            # 每 5 分钟
+              windowSeconds: 300
+              burst: 1.2
+            action: reject
+            statusCode: 429
+            headers:
+              Retry-After: "60"
+          # 模型维度（可选）
+          - name: model-token-limit
+            match:
+              path: /v1/chat/completions
+            limit:
+              tokens: 500000
+              windowSeconds: 60
+            action: reject
+            statusCode: 429
