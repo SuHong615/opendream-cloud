@@ -1,0 +1,14 @@
+# Build context: repo root
+# v3 工作流引擎（4105）：轻量状态机/PG+Redis；生产 Temporal（见 docs/02-architecture/services/WORKFLOW.md）
+FROM docker.m.daocloud.io/oven/bun:1.4.4
+WORKDIR /work
+COPY packages/shared ./packages/shared
+COPY packages/schema ./packages/schema
+COPY services/workflow-engine ./services/workflow-engine
+WORKDIR /work/services/workflow-engine
+RUN bun install --production --registry https://registry.npmmirror.com
+ENV NODE_ENV=development HOST=0.0.0.0 PORT=4105
+EXPOSE 4105
+HEALTHCHECK --interval=10s --timeout=5s --retries=12 \
+  CMD bun -e "fetch('http://127.0.0.1:4105/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["bun", "src/server.ts"]

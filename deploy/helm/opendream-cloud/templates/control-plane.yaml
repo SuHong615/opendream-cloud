@@ -1,0 +1,66 @@
+{{- if .Values.controlPlane.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: control-plane
+  namespace: {{ .Values.namespace.control }}
+  labels:
+    {{- include "opendream-cloud.labels" . | nindent 4 }}
+    app.kubernetes.io/name: control-plane
+spec:
+  replicas: {{ .Values.controlPlane.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: control-plane
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: control-plane
+    spec:
+      automountServiceAccountToken: false
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: control-plane
+          image: {{ include "opendream-cloud.image" .Values.controlPlane.image }}
+          ports:
+            - { name: http, containerPort: {{ .Values.controlPlane.port }} }
+          env:
+            - { name: CONTROL_PLANE_PORT, value: {{ .Values.controlPlane.port | quote }} }
+            - { name: NODE_ENV, value: {{ .Values.global.environment | quote }} }
+            {{- range $k, $v := .Values.controlPlane.env }}
+            - { name: {{ $k }}, value: {{ $v | quote }} }
+            {{- end }}
+          envFrom:
+            - secretRef: { name: {{ .Values.controlPlane.existingSecret }} }
+          resources: {{- toYaml .Values.controlPlane.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          startupProbe: { httpGet: { path: /healthz, port: http }, failureThreshold: 30, periodSeconds: 2 }
+          readinessProbe: { httpGet: { path: /healthz, port: http }, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, periodSeconds: 20 }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - { name: tmp, emptyDir: { sizeLimit: 256Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: control-plane
+  namespace: {{ .Values.namespace.control }}
+  labels: {{- include "opendream-cloud.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: control-plane
+  ports:
+    - { name: http, port: {{ .Values.controlPlane.port }}, targetPort: {{ .Values.controlPlane.port }} }
+{{- end }}

@@ -1,0 +1,165 @@
+# 统一路由：所有公网流量先到 Higress，再按域名分派到各数据面。
+# 安全：不接受客户端传入的 X-OC-Tenant / X-OC-User，统一在网关删除后由 auth-edge 注入。
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: api
+  namespace: opencode-control
+  labels: { opencode.cloud/gateway-access: "true" }
+spec:
+  parentRefs: [{ name: higress-public, namespace: higress-system, sectionName: https }]
+  hostnames: ["api.example.com"]
+  rules:
+    # v3 新服务只经 control-plane 门面（task-43/50）：显式声明映射，不新增独立公网域名。
+    - matches:
+        - path: { type: PathPrefix, value: /api/v1/workflows }
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            remove: [X-OC-Tenant, X-OC-User, X-Forwarded-User]
+      backendRefs: [{ name: control-plane, port: 4000 }]
+    - matches:
+        - path: { type: PathPrefix, value: /api/v1/dh }
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            remove: [X-OC-Tenant, X-OC-User, X-Forwarded-User]
+      backendRefs: [{ name: control-plane, port: 4000 }]
+    - matches:
+        - path: { type: PathPrefix, value: /api/v1/eval }
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            remove: [X-OC-Tenant, X-OC-User, X-Forwarded-User]
+      backendRefs: [{ name: control-plane, port: 4000 }]
+    - matches:
+        - path: { type: PathPrefix, value: /api/v1/memory }
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            remove: [X-OC-Tenant, X-OC-User, X-Forwarded-User]
+      backendRefs: [{ name: control-plane, port: 4000 }]
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            remove: [X-OC-Tenant, X-OC-User, X-Forwarded-User]
+      backendRefs: [{ name: control-plane, port: 4000 }]
+    # 模型调用走 /v1/* → LiteLLM（也可独立 llm.example.com，见下）
+    - matches:
+        - path: { type: PathPrefix, value: /v1/ }
+      backendRefs: [{ name: litellm, namespace: opencode-gateway, port: 4000 }]
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: console
+  namespace: opencode-control
+  labels: { opencode.cloud/gateway-access: "true" }
+spec:
+  parentRefs: [{ name: higress-public, namespace: higress-system, sectionName: https }]
+  hostnames: ["console.example.com"]
+  rules:
+    - matches: [{ path: { type: PathPrefix, value: / } }]
+      backendRefs: [{ name: console, port: 3000 }]
+---
+# MCP：工具调用入口（streamable HTTP/SSE）。协议适配在 Higress MCP Server 插件，
+# 工具级策略/凭证/审计在 MCP Gateway（PEP）——网关只转发到 mcp-gateway。
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: mcp
+  namespace: opencode-gateway
+  labels: { opencode.cloud/gateway-access: "true" }
+spec:
+  parentRefs: [{ name: higress-public, namespace: higress-system, sectionName: https }]
+  hostnames: ["mcp.example.com"]
+  rules:
+    - matches:
+        - path: { type: PathPrefix, value: /v1/ }
+      # SSE 需要长超时、不缓冲：由 Higress/网关策略控制（以实际版本为准）
+      backendRefs: [{ name: mcp-gateway, port: 8080 }]
+    - matches: [{ path: { type: Exact, value: /healthz } }]
+      backendRefs: [{ name: mcp-gateway, port: 8080 }]
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: llm
+  namespace: opencode-gateway
+  labels: { opencode.cloud/gateway-access: "true" }
+spec:
+  parentRefs: [{ name: higress-public, namespace: higress-system, sectionName: https }]
+  hostnames: ["llm.example.com"]
+  rules:
+    - matches: [{ path: { type: PathPrefix, value: / } }]
+      backendRefs: [{ name: litellm, port: 4000 }]
+---
+# 工作区：子域名（*.ws）。host-only cookie/access-ticket 在 workspace-gateway 处理。
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: workspaces
+  namespace: opencode-gateway
+  labels: { opencode.cloud/gateway-access: "true" }
+spec:
+  parentRefs: [{ name: higress-public, namespace: higress-system, sectionName: https }]
+  hostnames: ["*.ws.example.com"]
+  rules:
+    - matches: [{ path: { type: PathPrefix, value: / } }]
+      backendRefs: [{ name: workspace-gateway, port: 8080 }]
+---
+# 应用：子域名（*.apps）；ACL 在 app-gateway。
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: apps
+  namespace: opencode-gateway
+  labels: { opencode.cloud/gateway-access: "true" }
+spec:
+  parentRefs: [{ name: higress-public, namespace: higress-system, sectionName: https }]
+  hostnames: ["*.apps.example.com"]
+  rules:
+    - matches: [{ path: { type: PathPrefix, value: / } }]
+      backendRefs: [{ name: app-gateway, port: 8080 }]
+---
+# 数字人：仅信令/API 走 HTTP；RTC 媒体流走独立四层 SLB（UDP），不经此路由。
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: digital-human
+  namespace: opencode-gateway
+  labels: { opencode.cloud/gateway-access: "true" }
+spec:
+  parentRefs: [{ name: higress-public, namespace: higress-system, sectionName: https }]
+  hostnames: ["*.dh.example.com"]
+  rules:
+    - matches:
+        - path: { type: PathPrefix, value: /api/ }
+        - path: { type: PathPrefix, value: /rtc/ }
+      backendRefs: [{ name: dh-gateway, port: 8080 }]
+---
+# 可选：A2A 旁路（agentgateway）。仅当 A2A 成为 P0 时启用；不进入主链路。
+# apiVersion: gateway.networking.k8s.io/v1
+# kind: HTTPRoute
+# metadata: { name: a2a, namespace: opencode-gateway }
+# spec:
+#   parentRefs: [{ name: higress-public, namespace: higress-system, sectionName: https }]
+#   hostnames: ["a2a.example.com"]
+#   rules:
+#     - matches: [{ path: { type: PathPrefix, value: / } }]
+#       backendRefs: [{ name: agentgateway, port: 8080 }]
+---
+# 默认拒绝：未匹配任何域名的请求返回 404（不回落控制台首页）
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: default-deny
+  namespace: higress-system
+  labels: { opencode.cloud/gateway-access: "true" }
+spec:
+  parentRefs: [{ name: higress-public, namespace: higress-system, sectionName: https }]
+  rules:
+    - matches: [{ path: { type: PathPrefix, value: / } }]
+      backendRefs: [{ name: blackhole, port: 80 }]

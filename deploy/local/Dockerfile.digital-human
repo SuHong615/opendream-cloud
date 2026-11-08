@@ -1,0 +1,13 @@
+# Build context: repo root
+# v3 数字人控制面（4106）：会话/资产/渲染编排；RTC 媒体流在本地 Docker 栈不启用（见 DIGITAL-HUMAN-INFRA.md）
+FROM docker.m.daocloud.io/oven/bun:1.4.4
+WORKDIR /work
+COPY packages/shared ./packages/shared
+COPY services/digital-human ./services/digital-human
+WORKDIR /work/services/digital-human
+RUN bun install --production --registry https://registry.npmmirror.com
+ENV NODE_ENV=development HOST=0.0.0.0 PORT=4106
+EXPOSE 4106
+HEALTHCHECK --interval=10s --timeout=5s --retries=12 \
+  CMD bun -e "fetch('http://127.0.0.1:4106/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["bun", "src/server.ts"]

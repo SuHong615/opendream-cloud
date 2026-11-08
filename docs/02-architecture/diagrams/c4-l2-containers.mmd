@@ -1,0 +1,87 @@
+flowchart TB
+  classDef edge fill:#eef2ff,stroke:#4f46e5,color:#1e1b4b
+  classDef ctrl fill:#ecfeff,stroke:#0891b2,color:#164e63
+  classDef data fill:#f0fdf4,stroke:#16a34a,color:#14532d
+  classDef exec fill:#fff7ed,stroke:#ea580c,color:#7c2d12
+  classDef biz fill:#fdf2f8,stroke:#db2777,color:#831843
+  classDef store fill:#fef9c3,stroke:#ca8a04,color:#713f12
+
+  subgraph L0["L0 接入层（Unified AI Gateway · Higress）"]
+    GW["TLS/WAF · OIDC/APIKey · 租户路由 · 限流 · 灰度 · access log"]:::edge
+    EXT["ext-auth 回调<br/>control-plane auth-edge"]:::edge
+  end
+
+  subgraph L1["L1 控制面（Control Plane）"]
+    ID["Identity / Tenant / RBAC / API Key"]:::ctrl
+    WSO["Workspace Orchestrator<br/>4C8G·PVC·ticket·配置下发"]:::ctrl
+    MCPR["MCP Registry<br/>注册·版本·审核·签名·健康"]:::ctrl
+    MCPP["MCP Policy<br/>工具级 allow/deny·配额·预算"]:::ctrl
+    MC["Model Center<br/>连接·Key·策略·配置生成"]:::ctrl
+    AC["App Center<br/>权限·分享·协同提案"]:::ctrl
+    WF["Workflow Control<br/>DSL·实例·人工任务"]:::ctrl
+    DHC["Digital Human Control<br/>形象·音色·编排·RTC token"]:::ctrl
+    AU["Audit / Usage / Billing / Watchdog"]:::ctrl
+  end
+
+  subgraph L2["L2 数据面（Data Plane）"]
+    MCPGW["mcp-gateway<br/>协议适配·凭证注入·工具级 PEP·脱敏·熔断·缓存"]:::data
+    MGW["model-gateway<br/>LiteLLM·虚拟 Key·预算·路由"]:::data
+    APPGW["app/workspace gateway<br/>ticket 验签·ACL·反代"]:::data
+    TRIG["Trigger Bus<br/>Redis Streams→NATS"]:::data
+  end
+
+  subgraph L3["L3 执行层（Runtime）"]
+    WS["opencode workspace Pod 4C8G<br/>serve:4096·PVC"]:::exec
+    APP["App runtime 1C2G<br/>Web/Agent 应用"]:::exec
+    WFW["Workflow worker<br/>agent/tool/human/render 队列"]:::exec
+    DHR["Digital Human runtime<br/>ASR·TTS·lip-sync·SFU·GPU"]:::exec
+  end
+
+  subgraph L4["L4 业务层"]
+    B1["Web / Agent / 数字人 / 工作流 应用"]:::biz
+    B2["SDLC / 通用工作流模板"]:::biz
+    B3["数字人对外 API / SDK / iframe"]:::biz
+  end
+
+  subgraph ST["数据与基础设施"]
+    PG[("PostgreSQL 16")]:::store
+    RD[("Redis 7")]:::store
+    OS[("OSS")]:::store
+    KM[("KMS")]:::store
+    OB["OTel / Prometheus / Loki"]:::store
+  end
+
+  GW --> MCPGW
+  GW --> MGW
+  GW --> APPGW
+  GW --> EXT
+  MCPGW --> MCPR
+  MCPGW --> MCPP
+  MCPR -. 版本/健康 .-> MCPGW
+  MCPP -. 策略热切换 .-> MCPGW
+  APPGW --> WS
+  APPGW --> APP
+  TRIG --> WFW
+  WF --> WFW
+  DHC --> DHR
+  MC --> MGW
+  ID --> GW
+  WSO --> WS
+  WFW --> WS
+  WFW --> MCPGW
+  AC --> WS
+  WS --> B1
+  APP --> B1
+  WFW --> B2
+  DHR --> B3
+  MCPGW --> PG
+  MCPGW --> RD
+  MCPGW --> KM
+  WF --> PG
+  WS --> OS
+  APP --> OS
+  DHR --> OS
+  GW --> OB
+  MCPGW --> OB
+  MGW --> OB
+  WFW --> OB

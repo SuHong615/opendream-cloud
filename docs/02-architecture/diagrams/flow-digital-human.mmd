@@ -1,0 +1,28 @@
+sequenceDiagram
+  autonumber
+  participant U as 用户（浏览器/IM）
+  participant DH as Digital Human Control
+  participant SFU as WebRTC SFU（LiveKit）
+  participant ASR as ASR
+  participant AG as Model Gateway / Agent
+  participant MG as MCP Gateway
+  participant TTS as TTS
+  participant GPU as lip-sync / 渲染（GPU）
+  participant OB as 审计/水印
+
+  U->>DH: 创建数字人会话（app_id/persona/voice/mode）
+  DH->>DH: 授权校验（形象/音色/配额）+ 内容策略
+  DH->>SFU: 创建 room + 签发 RTC token（TTL≤5min）
+  DH-->>U: 推流地址 + token + 字幕通道
+  U->>SFU: 加入 room（音频上行）
+  SFU->>ASR: 音频流（分片 200-300ms）
+  ASR-->>AG: 流式转写
+  AG->>MG: tools/call（企业系统查询，可选）
+  MG-->>AG: 工具结果（脱敏）
+  AG-->>TTS: 首句流式输出（首句优先，不等全文）
+  TTS-->>GPU: 音频 chunk
+  GPU->>GPU: 口型/动作驱动 + 合成（720p）
+  GPU-->>SFU: 视频帧（+水印）
+  SFU-->>U: 下行音视频（目标 P50 ≤800ms）
+  DH->>OB: 会话事件/工具调用/水印/录制（可选）
+  Note over DH,GPU: 降级顺序：3D→2D 静态贴图→纯音频→文本+HLS

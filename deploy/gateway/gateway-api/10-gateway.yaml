@@ -1,0 +1,60 @@
+# 统一入口 Gateway：公网 HTTPS（WAF 后）+ 内网（可选）
+# - TLS 由 cert-manager 产出（见 security/10-certificates.yaml）
+# - RTC/媒体流不走此 Gateway，走独立四层 SLB（见 AI-GATEWAY.md §4.6）
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: higress-public
+  namespace: higress-system
+  labels: { app.kubernetes.io/part-of: opendream-cloud, opencode.cloud/gateway: higress }
+  annotations:
+    # 阿里云 SLB 注解（以 Higress/ACK 实际支持为准）
+    service.beta.kubernetes.io/alicloud-loadbalancer-address-type: internet
+    service.beta.kubernetes.io/alicloud-loadbalancer-charge-type: paybytraffic
+    service.beta.kubernetes.io/alicloud-loadbalancer-bandwidth: "500"
+spec:
+  gatewayClassName: higress
+  listeners:
+    - name: https
+      hostname: "*.example.com"
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: wildcard-example-com
+            namespace: higress-system
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              opencode.cloud/gateway-access: "true"
+    - name: http-redirect
+      hostname: "*.example.com"
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: higress-internal
+  namespace: higress-system
+  labels: { app.kubernetes.io/part-of: opendream-cloud, opencode.cloud/gateway: higress-internal }
+spec:
+  gatewayClassName: higress
+  listeners:
+    - name: http
+      hostname: "*.svc.cluster.local"
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              opencode.cloud/gateway-access: "true"

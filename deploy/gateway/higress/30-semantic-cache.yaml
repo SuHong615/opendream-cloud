@@ -1,0 +1,28 @@
+# 语义缓存（默认关闭，按模型白名单启用；不跨租户命中）
+apiVersion: extensions.higress.io/v1alpha1
+kind: WasmPlugin
+metadata:
+  name: ai-cache
+  namespace: higress-system
+  labels: { app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  url: oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-cache:2.2.4
+  phase: UNSPECIFIED_PHASE
+  priority: 250
+  matchRules:
+    - ingress:
+        - higress-system/higress-public
+      config:
+        # 仅白名单模型 + temperature=0 + 无用户上下文（避免个性化答案被缓存）
+        enabledModels: ["gpt-4o-mini", "oc-default"]
+        cacheKey:
+          includeTenant: true          # 必须：tenant 前缀，禁止跨租户命中
+          includeModel: true
+          includePromptHash: true
+          includeSystemPromptHash: true
+        ttlSeconds: 300
+        maxEntryBytes: 65536
+        # 语义匹配阈值（相似度）；越高越保守
+        similarityThreshold: 0.95
+        # 命中/未命中打标，供 Prometheus 统计
+        addCacheStatusHeader: true

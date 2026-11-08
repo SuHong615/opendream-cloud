@@ -1,0 +1,60 @@
+# MCP Server 插件样例（Higress）：协议适配 + REST→MCP
+# 权威工具清单/工具级策略在控制面 MCP Registry + MCP Gateway（PEP）；
+# 这里只放"入口协议适配"所需的最小配置，由控制面渲染/更新（GitOps）。
+# 字段以 Higress v2.2.x `mcp-server` 插件为准，生产按实际版本校验。
+apiVersion: extensions.higress.io/v1alpha1
+kind: WasmPlugin
+metadata:
+  name: mcp-server
+  namespace: higress-system
+  labels: { app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  url: oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/mcp-server:2.2.4
+  phase: UNSPECIFIED_PHASE
+  priority: 300
+  matchRules:
+    - ingress:
+        - higress-system/higress-public
+      config:
+        # ---- 代理已注册的 MCP Server（streamable HTTP） ----
+        server:
+          name: crm
+          protocol: streamable-http
+          path: /v1/org-demo/crm
+          upstream:
+            url: http://mcp-crm.opencode-gateway.svc.cluster.local:8081/mcp
+            # 凭证由 MCP Gateway 注入；此处仅透传内部鉴权头
+            headers:
+              X-OC-Mcp-Proxy: "higress"
+          securitySchemes:
+            - type: http
+              scheme: bearer
+              passthrough: true
+        # ---- REST → MCP：把企业 HTTP API 转成工具（不改造企业系统） ----
+        tools:
+          - name: get_order
+            description: 查询订单详情（企业订单 API 的 MCP 包装）
+            method: GET
+            path: /api/orders/{order_id}
+            upstream:
+              url: https://orders.internal.example.com
+            parameters:
+              - name: order_id
+                in: path
+                type: string
+                required: true
+            requestTemplate: |
+              GET /api/orders/{{ .args.order_id }} HTTP/1.1
+            responseTemplate: |
+              {{ .response.body }}
+          - name: search_customer
+            description: 按手机号/邮箱检索客户
+            method: POST
+            path: /api/customers/search
+            upstream:
+              url: https://crm.internal.example.com
+            parameters:
+              - name: keyword
+                in: body
+                type: string
+                required: true

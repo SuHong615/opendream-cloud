@@ -1,0 +1,34 @@
+# 平台命名空间（kind 本地开发）；生产为 ws-<orgId> 每组织一个 + 平台固定 ns。
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: opencode-system
+  labels: { pod-security.kubernetes.io/enforce: restricted, pod-security.kubernetes.io/enforce-version: latest }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: opencode-control
+  labels: { pod-security.kubernetes.io/enforce: restricted, pod-security.kubernetes.io/enforce-version: latest }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: opencode-gateway
+  labels: { pod-security.kubernetes.io/enforce: restricted, pod-security.kubernetes.io/enforce-version: latest }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: opencode-apps
+  labels: { pod-security.kubernetes.io/enforce: restricted, pod-security.kubernetes.io/enforce-version: latest }
+---
+# kind 开发用单组织命名空间；生产按 org 动态创建 ws-<orgId>
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ws-org-demo
+  labels:
+    opencode.cloud/org-id: org-demo
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest

@@ -1,0 +1,33 @@
+# 真实 ACK 演示工作区（4C8G）：公共 bun 镜像 + 启动时从 npmmirror 安装 opencode。
+# 生产应改为预构建 runtime 镜像（deploy/docker/workspace）并用 digest 固定。
+apiVersion: workspace.opencode.cloud/v1alpha1
+kind: OpencodeWorkspace
+metadata:
+  name: demo-ws
+  namespace: ws-org-demo
+  labels:
+    opencode.cloud/env: demo
+spec:
+  owner:
+    userId: demo-user
+    orgId: org-demo
+  size: 4C8G
+  image:
+    repository: docker.m.daocloud.io/oven/bun
+    tag: "1.4.4"
+  persistence:
+    mode: emptyDir
+    size: 20Gi
+    reclaimPolicy: retain
+  runtime:
+    command: ["/bin/sh", "-c"]
+    args:
+      - >-
+        export HOME=/home/opencode;
+        mkdir -p $HOME/oc;
+        cd $HOME/oc;
+        [ -f package.json ] || echo '{}' > package.json;
+        bun add @opencode/cli@2.2.5 --registry https://registry.npmmirror.com --trust >$HOME/install.log 2>&1 || { echo INSTALL_FAILED; tail -50 $HOME/install.log; sleep 600; };
+        echo INSTALL_OK;
+        exec $HOME/oc/node_modules/.bin/opencode serve --hostname 0.0.0.0 --port 4096
+    probe: tcp

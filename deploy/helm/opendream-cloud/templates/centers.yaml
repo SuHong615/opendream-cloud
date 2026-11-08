@@ -1,0 +1,71 @@
+# G5 四中心服务（Helm 渲染；镜像/tag 由 values 控制）
+{{- $centers := list
+  (dict "name" "skill-center" "port" 4101 "imageKey" "skillCenter")
+  (dict "name" "eval-center" "port" 4102 "imageKey" "evalCenter")
+  (dict "name" "app-center" "port" 4103 "imageKey" "appCenter")
+  (dict "name" "mcp-hub" "port" 4104 "imageKey" "mcpHub")
+-}}
+{{- range $center := $centers }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $center.name }}
+  namespace: {{ $.Release.Namespace | default "platform-system" }}
+  labels:
+    app.kubernetes.io/name: {{ $center.name }}
+    app.kubernetes.io/part-of: opendream-cloud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $center.name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $center.name }}
+        app.kubernetes.io/part-of: opendream-cloud
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: {{ $center.name }}
+          image: {{ index $.Values.images $center.imageKey }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { containerPort: {{ $center.port }}, name: http }
+          env:
+            - { name: NODE_ENV, value: production }
+            - { name: PORT, value: "{{ $center.port }}" }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $center.name }}
+  namespace: {{ $.Release.Namespace | default "platform-system" }}
+  labels:
+    app.kubernetes.io/name: {{ $center.name }}
+    app.kubernetes.io/part-of: opendream-cloud
+spec:
+  selector:
+    app.kubernetes.io/name: {{ $center.name }}
+  ports:
+    - { name: http, port: {{ $center.port }}, targetPort: http }
+{{- end }}

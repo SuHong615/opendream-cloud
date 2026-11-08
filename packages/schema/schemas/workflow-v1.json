@@ -1,0 +1,382 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opencode.cloud/schemas/workflow-v1.json",
+  "title": "OpenDream Cloud Workflow DSL v1",
+  "description": "Workflow DSL v1（与 docs/02-architecture/services/WORKFLOW.md §3 一致）。权威文件：packages/schema/schemas/workflow-v1.json。约束原则：v1.x 只做加法（新增可选字段/节点类型按能力开关），破坏性变更升 v2。",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": { "const": "workflow.opencode.cloud/v1" },
+    "kind": { "const": "Workflow" },
+    "metadata": { "$ref": "#/$defs/metadata" },
+    "spec": { "$ref": "#/$defs/spec" }
+  },
+  "$defs": {
+    "semver": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(?:[-+][0-9A-Za-z.-]+)?$" },
+    "duration": {
+      "type": "string",
+      "description": "时长：数字+单位（ms|s|m|h|d），如 30s、72h、30d",
+      "pattern": "^\\d+(ms|s|m|h|d)$"
+    },
+    "expression": {
+      "type": "string",
+      "description": "表达式：${inputs.x} / ${steps.id.output.field} / ${steps.id.status} / ${run.id} / ${run.tenantId} / ${secrets.ref}（仅凭证引用）/ ${env.name}；只允许字段访问、比较、布尔组合与 contains/length 白名单函数"
+    },
+    "jsonSchema": {
+      "description": "内嵌 JSON Schema（inputs/outputs/outputSchema）；校验器仅做结构性检查",
+      "type": ["object", "boolean"]
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]{2,62}$" },
+        "version": { "$ref": "#/$defs/semver" },
+        "displayName": { "type": "string", "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "labels": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "deprecated": { "type": "boolean", "default": false }
+      }
+    },
+    "trigger": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 1,
+      "additionalProperties": false,
+      "description": "单触发源（manual/webhook/timer/event 四选一）",
+      "properties": {
+        "manual": { "type": "object", "additionalProperties": true },
+        "webhook": {
+          "type": "object",
+          "required": ["path", "secret_ref"],
+          "additionalProperties": false,
+          "properties": {
+            "path": { "type": "string", "pattern": "^/" },
+            "secret_ref": { "type": "string", "minLength": 1 },
+            "method": { "type": "string", "enum": ["POST", "PUT"] },
+            "expected": { "$ref": "#/$defs/jsonSchema" }
+          }
+        },
+        "timer": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cron": { "type": "string", "minLength": 5 },
+            "every": { "$ref": "#/$defs/duration" },
+            "timezone": { "type": "string" }
+          },
+          "anyOf": [{ "required": ["cron"] }, { "required": ["every"] }]
+        },
+        "event": {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "type": "string", "minLength": 1 },
+            "filter": { "type": ["object", "null"], "additionalProperties": true }
+          }
+        }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "工作流可用能力的显式声明（未声明=不可用）",
+      "properties": {
+        "mcp": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "models": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "workspaces": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "apps": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "secrets": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    },
+    "retry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxAttempts": { "type": "integer", "minimum": 1, "maximum": 10, "default": 3 },
+        "backoff": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "base": { "$ref": "#/$defs/duration", "default": "1s" },
+            "factor": { "type": "number", "minimum": 1, "maximum": 10, "default": 2 },
+            "maxInterval": { "$ref": "#/$defs/duration" },
+            "jitter": { "type": "boolean", "default": true }
+          }
+        },
+        "nonRetryable": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true,
+          "description": "不可重试错误码，如 validation_failed、precondition_failed"
+        }
+      }
+    },
+    "assignee": {
+      "type": "object",
+      "required": ["type", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "enum": ["user", "role", "team"] },
+        "value": { "type": "string", "minLength": 1 }
+      }
+    },
+    "sla": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "due": { "$ref": "#/$defs/duration" },
+        "escalateTo": { "$ref": "#/$defs/assignee" },
+        "escalateAfter": { "$ref": "#/$defs/duration" }
+      }
+    },
+    "nodeBase": {
+      "type": "object",
+      "required": ["id", "type"],
+      "additionalProperties": true,
+      "description": "节点通用字段；按类型附加必填字段（见 allOf 条件分支）",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,62}$" },
+        "type": {
+          "type": "string",
+          "enum": ["agent", "mcp_tool", "human_approval", "condition", "parallel", "subworkflow", "timer", "webhook", "script", "render"]
+        },
+        "name": { "type": "string", "maxLength": 120 },
+        "needs": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,62}$" },
+          "uniqueItems": true,
+          "description": "DAG 依赖（前驱节点 id）"
+        },
+        "when": { "$ref": "#/$defs/expression" },
+        "input": { "type": "object", "additionalProperties": true },
+        "retry": { "$ref": "#/$defs/retry" },
+        "timeout": { "$ref": "#/$defs/duration" },
+        "onError": {
+          "type": "string",
+          "pattern": "^(fail|continue|route:[a-z][a-z0-9_]{1,62})$",
+          "default": "fail",
+          "description": "fail（默认）/ continue（记录并继续）/ route:<node_id>（转补偿或人工）"
+        },
+        "compensate": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{1,62}$",
+          "description": "补偿节点 id（有副作用节点必须声明；失败/取消时逆序执行）"
+        },
+        "outputSchema": { "$ref": "#/$defs/jsonSchema" },
+        "idempotent": { "type": "boolean", "description": "外部队列/API 节点是否幂等（默认按 Activity 幂等键保证）" }
+      }
+    },
+    "agentNode": {
+      "description": "Agent 节点：调用 opencode 工作区/Agent Runtime",
+      "required": ["model_ref"],
+      "properties": {
+        "type": { "const": "agent" },
+        "model_ref": { "type": "string", "minLength": 1 },
+        "workspace_ref": { "type": "string" },
+        "skill_refs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "mcp_bindings": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "timeout": { "$ref": "#/$defs/duration" },
+        "input": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "prompt": { "type": "string", "minLength": 1 },
+            "prompt_ref": { "type": "string" }
+          },
+          "anyOf": [{ "required": ["prompt"] }, { "required": ["prompt_ref"] }]
+        }
+      }
+    },
+    "mcpToolNode": {
+      "description": "MCP 工具节点：经 MCP Gateway 调用企业工具",
+      "properties": {
+        "type": { "const": "mcp_tool" },
+        "input": {
+          "type": "object",
+          "required": ["server", "tool"],
+          "additionalProperties": true,
+          "properties": {
+            "server": { "type": "string", "minLength": 1 },
+            "tool": { "type": "string", "minLength": 1 },
+            "args": { "type": "object", "additionalProperties": true }
+          }
+        },
+        "result_schema": { "$ref": "#/$defs/jsonSchema" }
+      }
+    },
+    "humanApprovalNode": {
+      "description": "人工审批/确认/填写（写 human_tasks）",
+      "required": ["assignee"],
+      "properties": {
+        "type": { "const": "human_approval" },
+        "assignee": { "$ref": "#/$defs/assignee" },
+        "sla": { "$ref": "#/$defs/sla" },
+        "input": {
+          "type": "object",
+          "required": ["title"],
+          "additionalProperties": true,
+          "properties": {
+            "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "form": { "$ref": "#/$defs/jsonSchema" },
+            "description": { "type": "string" }
+          }
+        }
+      }
+    },
+    "conditionNode": {
+      "description": "条件分支（受限表达式）",
+      "properties": {
+        "type": { "const": "condition" },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["when", "next"],
+            "additionalProperties": false,
+            "properties": {
+              "when": { "$ref": "#/$defs/expression" },
+              "next": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,62}$" }
+            }
+          }
+        },
+        "else": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,62}$" },
+        "then": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,62}$" },
+        "when": { "$ref": "#/$defs/expression" }
+      },
+      "anyOf": [
+        { "required": ["cases"] },
+        { "required": ["when", "then"] }
+      ]
+    },
+    "parallelNode": {
+      "description": "并行分支",
+      "required": ["branches"],
+      "properties": {
+        "type": { "const": "parallel" },
+        "branches": { "type": "array", "minItems": 2, "items": { "type": ["string", "object"] } },
+        "join": { "type": "string", "enum": ["all", "any", "n_of_m"], "default": "all" },
+        "n": { "type": "integer", "minimum": 2 },
+        "fail_fast": { "type": "boolean", "default": false }
+      }
+    },
+    "subworkflowNode": {
+      "description": "调用子流程（Child Workflow）",
+      "required": ["workflow_ref", "version"],
+      "properties": {
+        "type": { "const": "subworkflow" },
+        "workflow_ref": { "type": "string", "minLength": 1 },
+        "version": { "$ref": "#/$defs/semver" },
+        "inputs": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "timerNode": {
+      "description": "延时/等待",
+      "properties": {
+        "type": { "const": "timer" },
+        "duration": { "$ref": "#/$defs/duration" },
+        "until": { "$ref": "#/$defs/expression" },
+        "onTimeout": { "type": "string", "enum": ["fail", "route"] }
+      },
+      "anyOf": [{ "required": ["duration"] }, { "required": ["until"] }]
+    },
+    "webhookNode": {
+      "description": "等待外部回调（Signal）",
+      "required": ["path", "secret_ref"],
+      "properties": {
+        "type": { "const": "webhook" },
+        "path": { "type": "string", "pattern": "^/" },
+        "secret_ref": { "type": "string", "minLength": 1 },
+        "timeout": { "$ref": "#/$defs/duration" },
+        "expected": { "$ref": "#/$defs/jsonSchema" }
+      }
+    },
+    "scriptNode": {
+      "description": "受限脚本（沙箱、默认禁网）",
+      "required": ["runtime", "code_ref"],
+      "properties": {
+        "type": { "const": "script" },
+        "runtime": { "type": "string", "enum": ["deno", "wasm"] },
+        "code_ref": { "type": "string", "minLength": 1 },
+        "timeout": { "$ref": "#/$defs/duration" },
+        "network": { "type": "string", "enum": ["none", "allowlist"], "default": "none" },
+        "allowlist": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cpu": { "type": "string" },
+            "memory": { "type": "string" }
+          }
+        }
+      }
+    },
+    "renderNode": {
+      "description": "数字人渲染节点（离线/近实时）",
+      "required": ["app_id"],
+      "properties": {
+        "type": { "const": "render" },
+        "app_id": { "type": "string", "format": "uuid" },
+        "script": { "type": "string" },
+        "script_ref": { "type": "string" },
+        "avatar": { "type": "string" },
+        "voice": { "type": "string" },
+        "output": { "type": "object", "additionalProperties": true }
+      },
+      "anyOf": [{ "required": ["script"] }, { "required": ["script_ref"] }]
+    },
+    "node": {
+      "allOf": [
+        { "$ref": "#/$defs/nodeBase" },
+        { "if": { "properties": { "type": { "const": "agent" } }, "required": ["type"] }, "then": { "$ref": "#/$defs/agentNode" } },
+        { "if": { "properties": { "type": { "const": "mcp_tool" } }, "required": ["type"] }, "then": { "$ref": "#/$defs/mcpToolNode" } },
+        { "if": { "properties": { "type": { "const": "human_approval" } }, "required": ["type"] }, "then": { "$ref": "#/$defs/humanApprovalNode" } },
+        { "if": { "properties": { "type": { "const": "condition" } }, "required": ["type"] }, "then": { "$ref": "#/$defs/conditionNode" } },
+        { "if": { "properties": { "type": { "const": "parallel" } }, "required": ["type"] }, "then": { "$ref": "#/$defs/parallelNode" } },
+        { "if": { "properties": { "type": { "const": "subworkflow" } }, "required": ["type"] }, "then": { "$ref": "#/$defs/subworkflowNode" } },
+        { "if": { "properties": { "type": { "const": "timer" } }, "required": ["type"] }, "then": { "$ref": "#/$defs/timerNode" } },
+        { "if": { "properties": { "type": { "const": "webhook" } }, "required": ["type"] }, "then": { "$ref": "#/$defs/webhookNode" } },
+        { "if": { "properties": { "type": { "const": "script" } }, "required": ["type"] }, "then": { "$ref": "#/$defs/scriptNode" } },
+        { "if": { "properties": { "type": { "const": "render" } }, "required": ["type"] }, "then": { "$ref": "#/$defs/renderNode" } }
+      ]
+    },
+    "spec": {
+      "type": "object",
+      "required": ["nodes"],
+      "additionalProperties": true,
+      "properties": {
+        "description": { "type": "string", "maxLength": 4000 },
+        "minRuntimeVersion": { "$ref": "#/$defs/semver" },
+        "trigger": { "$ref": "#/$defs/trigger" },
+        "inputs": { "$ref": "#/$defs/jsonSchema" },
+        "outputs": { "$ref": "#/$defs/jsonSchema" },
+        "permissions": { "$ref": "#/$defs/permissions" },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "defaults": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "retry": { "$ref": "#/$defs/retry" },
+            "timeout": { "$ref": "#/$defs/duration" },
+            "onError": { "type": "string", "enum": ["fail", "continue"] }
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/node" }
+        }
+      }
+    }
+  }
+}

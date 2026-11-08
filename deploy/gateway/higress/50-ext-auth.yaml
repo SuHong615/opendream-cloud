@@ -1,0 +1,39 @@
+# ext-auth：网关调用控制面 auth-edge 做统一鉴权（OIDC 会话 / API Key / access ticket）
+# 原则：网关只校验"签名/有效期/租户绑定"，不做 SSO；SSO 归 control-plane auth-edge（唯一 OIDC RP）。
+apiVersion: extensions.higress.io/v1alpha1
+kind: WasmPlugin
+metadata:
+  name: ext-auth
+  namespace: higress-system
+  labels: { app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  url: oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ext-auth:2.2.4
+  phase: UNSPECIFIED_PHASE
+  priority: 400
+  matchRules:
+    - ingress:
+        - higress-system/higress-public
+      config:
+        # auth-edge 内网服务（唯一 OIDC RP + ticket 验签）
+        httpService:
+          serviceName: control-plane.opencode-control.svc.cluster.local
+          port: 4000
+          path: /internal/authz/check
+          timeout: 1000
+        # 允许未认证访问的路径（健康检查/静态资源）
+        bypass:
+          - /healthz
+          - /readyz
+          - /.well-known/*
+        # 鉴权成功后的可信头注入（先删除客户端同名头，见 HTTPRoute RequestHeaderModifier）
+        headers:
+          - name: X-OC-Tenant
+            from: response.tenant_id
+          - name: X-OC-User
+            from: response.user_id
+          - name: X-OC-Scopes
+            from: response.scopes
+        # 失败语义与平台错误模型一致
+        unauthorizedStatusCode: 401
+        forbiddenStatusCode: 403
+        failureModeAllow: false       # 鉴权服务不可用时 fail-closed

@@ -1,0 +1,8 @@
+# Build context: repo root
+FROM docker.m.daocloud.io/oven/bun:1.4.4
+WORKDIR /app
+COPY services/local-gateway/package.json ./package.json
+COPY services/local-gateway/src ./src
+ENV NODE_ENV=production PORT=8080
+EXPOSE 8080
+CMD ["bun", "src/server.ts"]

@@ -1,0 +1,14 @@
+{
+  "name": "@opendream-cloud/local-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun src/server.ts"
+  },
+  "license": "Apache-2.0",
+  "author": "suhong",
+  "contributors": [
+    "suhong"
+  ]
+}

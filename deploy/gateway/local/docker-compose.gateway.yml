@@ -1,0 +1,30 @@
+# 本地网关 profile（与 deploy/local/docker-compose.yml 叠加使用）
+#   docker compose -f deploy/local/docker-compose.yml -f deploy/gateway/local/docker-compose.gateway.yml --profile local-gateway up -d
+#
+# 边界（Lead 裁决）：local-gateway:8080 是统一 ingress；/mcp/* → mcp-hub 纯反代（不做工具策略）；
+# mcp-hub 自暴露 /v1/{orgSlug}/{serverSlug} 供测试直连。生产 Higress /mcp/* → MCP Gateway（PEP 在 MCP Gateway）。
+#
+# 端口：mcp-hub 固定 4104（lead 裁决 2026-11-08；不改现有 compose）。入口 /mcp/v1/{orgSlug}/{serverSlug} 去 /mcp 前缀后转发。
+#      MCP_HUB_URL 可覆盖（默认 http://mcp-hub:4104）。
+services:
+  gateway:
+    environment:
+      # local-gateway 需实现 /mcp/* → MCP_HUB_URL 的纯反代（见 local-gateway-mcp-route.md）
+      MCP_HUB_URL: http://mcp-hub:4104
+      MCP_PATH_PREFIX: /mcp
+
+  # 可选：Envoy profile（更接近生产 L7 行为：Host 路由 / header 删除 / SSE 不缓冲）
+  envoy-gateway:
+    image: envoyproxy/envoy:v1.31-latest
+    profiles: [envoy]
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml:ro
+    command: ["-c", "/etc/envoy/envoy.yaml", "--log-level", "info"]
+    restart: unless-stopped
+    depends_on:
+      control-plane:
+        condition: service_started
+      mcp-hub:
+        condition: service_started

@@ -1,0 +1,11 @@
+# Build context: repo root
+FROM docker.m.daocloud.io/oven/bun:1.4.4
+WORKDIR /app
+COPY apps/control-plane/package.json ./package.json
+RUN bun install --production --registry https://registry.npmmirror.com
+COPY apps/control-plane/tsconfig.json ./tsconfig.json
+COPY apps/control-plane/src ./src
+COPY apps/control-plane/db ./db
+ENV NODE_ENV=development HOST=0.0.0.0 PORT=4000
+EXPOSE 4000
+CMD ["sh", "-c", "bun src/db/migrate.ts && exec bun src/server.ts"]

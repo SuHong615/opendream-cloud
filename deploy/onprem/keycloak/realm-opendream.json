@@ -1,0 +1,56 @@
+{
+  "realm": "opendream",
+  "enabled": true,
+  "displayName": "OpenDream Cloud",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "accessTokenLifespan": 3600,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "roles": {
+    "realm": [
+      { "name": "opendream-user", "description": "OpenDream 普通用户" },
+      { "name": "opendream-admin", "description": "OpenDream 管理员" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "opendream-cloud",
+      "name": "OpenDream Cloud Control Plane",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "https://opendream.example.com/api/v1/auth/callback",
+        "http://localhost:4000/api/v1/auth/callback"
+      ],
+      "webOrigins": [
+        "https://opendream.example.com",
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "https://opendream.example.com/*##http://localhost:3000/*"
+      },
+      "defaultClientScopes": ["openid", "profile", "email", "roles"]
+    }
+  ],
+  "users": [
+    {
+      "username": "demo",
+      "enabled": true,
+      "email": "demo@opendream.example",
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "User",
+      "credentials": [{ "type": "password", "value": "change-me", "temporary": true }],
+      "realmRoles": ["opendream-user"]
+    }
+  ]
+}

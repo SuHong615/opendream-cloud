@@ -1,0 +1,97 @@
+{{- if .Values.operator.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: workspace-operator
+  namespace: {{ .Values.namespace.system }}
+  labels: {{- include "opendream-cloud.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: workspace-operator
+  labels: {{- include "opendream-cloud.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["workspace.opencode.cloud"]
+    resources: ["opencodeworkspaces"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["workspace.opencode.cloud"]
+    resources: ["opencodeworkspaces/status"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: ["workspace.opencode.cloud"]
+    resources: ["opencodeworkspaces/finalizers"]
+    verbs: ["update"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims", "services", "events"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: workspace-operator
+  labels: {{- include "opendream-cloud.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: workspace-operator
+subjects:
+  - kind: ServiceAccount
+    name: workspace-operator
+    namespace: {{ .Values.namespace.system }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workspace-operator
+  namespace: {{ .Values.namespace.system }}
+  labels: {{- include "opendream-cloud.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.operator.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: workspace-operator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: workspace-operator
+    spec:
+      serviceAccountName: workspace-operator
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        fsGroup: 65532
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: operator
+          image: {{ include "opendream-cloud.image" .Values.operator.image }}
+          args:
+            - --leader-elect={{ .Values.operator.leaderElection }}
+            - --metrics-bind-address=:8080
+            - --health-probe-bind-address=:8081
+          env:
+            - name: WORKSPACE_DOMAIN
+              value: {{ include "opendream-cloud.workspaceDomain" . }}
+          ports:
+            - { name: metrics, containerPort: 8080 }
+            - { name: health, containerPort: 8081 }
+          resources: {{- toYaml .Values.operator.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          livenessProbe: { httpGet: { path: /healthz, port: health }, periodSeconds: 20 }
+          readinessProbe: { httpGet: { path: /readyz, port: health }, periodSeconds: 10 }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - { name: tmp, emptyDir: { sizeLimit: 256Mi } }
+{{- end }}

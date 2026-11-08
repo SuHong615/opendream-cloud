@@ -1,0 +1,29 @@
+flowchart TB
+  classDef person fill:#fef3c7,stroke:#d97706,color:#78350f
+  classDef sys fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+  classDef ext fill:#f3f4f6,stroke:#6b7280,color:#111827
+  classDef store fill:#fef9c3,stroke:#ca8a04,color:#713f12
+
+  U1["开发者 / 平台管理员<br/>Web 控制台"]:::person
+  U2["应用使用者 / 观众<br/>分享链接、数字人会话"]:::person
+  U3["企业系统 / IM<br/>钉钉·飞书·企微·Webhook"]:::person
+
+  S["OpenDream Cloud v3<br/>MCP 能力总线 + 统一 AI 网关<br/>工作区/应用/数字人/工作流"]:::sys
+
+  E1["企业 IdP<br/>OIDC"]:::ext
+  E2["模型供应商<br/>DeepSeek·通义·OpenAI·Kimi"]:::ext
+  E3["企业 MCP Server<br/>CRM·订单·知识库·工单"]:::ext
+  E4["Git / CI<br/>GitHub·GitLab"]:::ext
+  E5["RTC / GPU 基础设施<br/>ACK·GPU 池"]:::ext
+
+  D1[("PostgreSQL / Redis / OSS / KMS")]:::store
+
+  U1 -->|HTTPS + SSO| S
+  U2 -->|分享链接 SSO / WebRTC| S
+  U3 -->|Webhook / APIKey / MCP| S
+  S -->|OIDC 授权码 PKCE| E1
+  S -->|OpenAI 兼容（经 Model Gateway）| E2
+  S -->|MCP streamable HTTP/SSE（经 MCP Gateway）| E3
+  S -->|PR / Check / 构建上下文| E4
+  S -->|WebRTC SFU / GPU 推理| E5
+  S -->|持久化/密钥/审计| D1

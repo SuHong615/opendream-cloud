@@ -1,0 +1,11 @@
+# Build context: repo root
+FROM docker.m.daocloud.io/oven/bun:1.4.4
+WORKDIR /app
+ARG API_PROXY_TARGET=http://control-plane:4000
+ENV API_PROXY_TARGET=${API_PROXY_TARGET}
+COPY apps/console/package.json ./package.json
+RUN bun install --registry https://registry.npmmirror.com
+COPY apps/console ./
+RUN bun run build
+EXPOSE 3000
+CMD ["bun", "run", "start"]

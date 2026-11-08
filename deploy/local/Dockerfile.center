@@ -1,0 +1,10 @@
+# Build context: repo root
+FROM docker.m.daocloud.io/oven/bun:1.4.4
+ARG SERVICE=skill-center
+WORKDIR /work
+COPY packages/shared ./packages/shared
+COPY services/${SERVICE} ./services/${SERVICE}
+WORKDIR /work/services/${SERVICE}
+RUN bun install --production --registry https://registry.npmmirror.com
+ENV NODE_ENV=development HOST=0.0.0.0
+CMD ["bun", "src/server.ts"]

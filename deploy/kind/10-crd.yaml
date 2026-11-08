@@ -1,0 +1,155 @@
+# OpencodeWorkspace CRD (G4 contract + optional runtime override)
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: opencodeworkspaces.workspace.opencode.cloud
+  labels:
+    app.kubernetes.io/name: opencode-workspace-crd
+spec:
+  group: workspace.opencode.cloud
+  scope: Namespaced
+  names:
+    kind: OpencodeWorkspace
+    listKind: OpencodeWorkspaceList
+    plural: opencodeworkspaces
+    singular: opencodeworkspace
+    shortNames:
+      - ow
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      additionalPrinterColumns:
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: URL
+          type: string
+          jsonPath: .status.url
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      subresources:
+        status: {}
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            spec:
+              type: object
+              required:
+                - owner
+                - size
+                - image
+              properties:
+                owner:
+                  type: object
+                  required:
+                    - userId
+                  properties:
+                    userId:
+                      type: string
+                      minLength: 1
+                    orgId:
+                      type: string
+                size:
+                  type: string
+                  enum:
+                    - 4C8G
+                image:
+                  type: object
+                  required:
+                    - repository
+                  properties:
+                    repository:
+                      type: string
+                      minLength: 1
+                    tag:
+                      type: string
+                    digest:
+                      type: string
+                      pattern: '^sha256:[a-f0-9]{64}$'
+                persistence:
+                  type: object
+                  properties:
+                    mode:
+                      type: string
+                      enum:
+                        - pvc
+                        - emptyDir
+                    size:
+                      type: string
+                      pattern: '^[0-9]+(Gi|Ti)$'
+                    storageClass:
+                      type: string
+                    reclaimPolicy:
+                      type: string
+                      enum:
+                        - retain
+                        - snapshot-then-delete
+                        - delete
+                runtime:
+                  type: object
+                  description: optional runtime overrides (command/args/probe)
+                  properties:
+                    command:
+                      type: array
+                      items:
+                        type: string
+                    args:
+                      type: array
+                      items:
+                        type: string
+                    probe:
+                      type: string
+                      enum:
+                        - agent
+                        - tcp
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum:
+                    - Pending
+                    - Provisioning
+                    - Starting
+                    - Ready
+                    - Idle
+                    - Stopping
+                    - Stopped
+                    - Error
+                    - Deleting
+                    - Deleted
+                url:
+                  type: string
+                podName:
+                  type: string
+                serviceName:
+                  type: string
+                pvcName:
+                  type: string
+                observedGeneration:
+                  type: integer
+                  format: int64
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - status
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time

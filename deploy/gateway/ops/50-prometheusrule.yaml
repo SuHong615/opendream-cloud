@@ -1,0 +1,73 @@
+# 网关层告警（P0–P2），与 AI-GATEWAY.md §6.3/§7.2 对齐
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: gateway-slo
+  namespace: higress-system
+  labels: { release: prometheus, app.kubernetes.io/part-of: opendream-cloud }
+spec:
+  groups:
+    - name: gateway.slo
+      rules:
+        - alert: GatewayHigh5xx
+          expr: sum(rate(higress_requests_total{code=~"5.."}[5m])) / clamp_min(sum(rate(higress_requests_total[5m])), 1) > 0.01
+          for: 5m
+          labels: { severity: P0 }
+          annotations: { summary: "AI 网关 5xx >1%（5min）", runbook: "RUNBOOK#gateway-5xx" }
+        - alert: GatewayLatencyHigh
+          expr: histogram_quantile(0.95, sum by (le) (rate(higress_request_duration_seconds_bucket[5m]))) > 0.1
+          for: 10m
+          labels: { severity: P1 }
+          annotations: { summary: "网关 p95 附加时延 >100ms" }
+        - alert: GatewayConnectionsExhausted
+          expr: sum(higress_connections_active) / clamp_min(sum(higress_connections_limit), 1) > 0.85
+          for: 5m
+          labels: { severity: P1 }
+        - alert: GatewayReplicasLow
+          expr: kube_deployment_status_replicas_available{deployment="higress-gateway",namespace="higress-system"} < 3
+          for: 5m
+          labels: { severity: P0 }
+        - alert: McpGatewayReplicasLow
+          expr: kube_deployment_status_replicas_available{deployment="mcp-gateway",namespace="opencode-gateway"} < 2
+          for: 2m
+          labels: { severity: P0 }
+    - name: gateway.ai
+      rules:
+        - alert: ModelFallbackRateHigh
+          expr: sum(rate(llm_fallback_total[10m])) / clamp_min(sum(rate(llm_requests_total[10m])), 1) > 0.1
+          for: 10m
+          labels: { severity: P1 }
+        - alert: SemanticCacheErrorRate
+          expr: sum(rate(ai_cache_errors_total[5m])) > 1
+          for: 5m
+          labels: { severity: P2 }
+        - alert: UpstreamCircuitOpen
+          expr: max by (upstream) (circuit_breaker_state{state="open"}) > 0
+          for: 1m
+          labels: { severity: P1 }
+          annotations: { summary: "上游熔断打开（{{ $labels.upstream }}）" }
+    - name: gateway.mcp
+      rules:
+        - alert: McpToolErrorRate
+          expr: sum by (server, tool) (rate(mcp_tool_calls_total{status="error"}[5m])) / clamp_min(sum by (server, tool) (rate(mcp_tool_calls_total[5m])), 1) > 0.05
+          for: 10m
+          labels: { severity: P1 }
+        - alert: AuditQueueBacklog
+          expr: audit_queue_depth > 10000 or audit_queue_oldest_seconds > 60
+          for: 5m
+          labels: { severity: P1 }
+          annotations: { summary: "审计队列积压（降级：采样/保安全事件）" }
+        - alert: McpServerUnhealthy
+          expr: mcp_server_health == 0
+          for: 5m
+          labels: { severity: P2 }
+    - name: gateway.cert
+      rules:
+        - alert: GatewayCertExpiringSoon
+          expr: certmanager_certificate_expiration_timestamp_seconds{namespace="higress-system"} - time() < 21*24*3600
+          for: 1h
+          labels: { severity: P1 }
+        - alert: GatewayCertExpired
+          expr: certmanager_certificate_expiration_timestamp_seconds{namespace="higress-system"} - time() < 0
+          for: 5m
+          labels: { severity: P0 }

@@ -1,0 +1,32 @@
+# Build context: repo root
+FROM docker.m.daocloud.io/oven/bun:1.4.4
+
+RUN bun add -g @opencode/cli@2.2.5 --registry https://registry.npmmirror.com --trust \
+ && /usr/local/bin/opencode --version
+
+# 全局安装目录在 /root 下（uid 1000 不可读），复制到 /opt 并做世界可读
+RUN cp -a /root/.bun /opt/bun \
+ && chmod -R a+rX /opt/bun \
+ && ln -sf /opt/bun/install/global/node_modules/@opencode/cli/bin/opencode.exe /usr/local/bin/opencode
+
+RUN mkdir -p /workspace /home/opencode/.config/opencode /home/opencode/.local/share/opencode \
+ && chown -R 1000:1000 /home/opencode /workspace
+
+COPY deploy/docker/workspace/entrypoint.sh /usr/local/bin/opendream-cloud-entrypoint
+RUN chmod 0755 /usr/local/bin/opendream-cloud-entrypoint
+
+# 分发镜像时保留自研与第三方许可证/归属
+COPY LICENSES /usr/share/licenses/opendream-cloud/LICENSES
+COPY THIRD_PARTY_NOTICES.md NOTICE /usr/share/licenses/opendream-cloud/
+RUN chmod -R a+rX /usr/share/licenses/opendream-cloud
+
+ENV HOME=/home/opencode \
+    XDG_CONFIG_HOME=/home/opencode/.config \
+    XDG_DATA_HOME=/home/opencode/.local/share \
+    OPENCODE_DISABLE_AUTOUPDATE=1 \
+    OPENCODE_VERSION=2.2.5
+
+USER 1000:1000
+WORKDIR /home/opencode
+EXPOSE 4096 8081
+ENTRYPOINT ["/usr/local/bin/opendream-cloud-entrypoint"]

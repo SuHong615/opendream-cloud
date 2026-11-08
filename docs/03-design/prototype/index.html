@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OpenDream Cloud · 控制台原型（登录 → 工作区 → 分享）</title>
+<!--
+  原型范围说明：本文件用于验证信息架构与主流程（登录 → 自动拉起 → 工作区 → 分享面板），
+  仅覆盖鼠标路径；键盘可达性、焦点管理、屏幕阅读器与 WCAG 2.1 AA 由 G6 的 axe/Playwright 键盘脚本验证，
+  不把本原型当作无障碍验收证据。全部样式内联，无外部依赖。
+-->
+<style>
+  :root{
+    --bg:#f8fafc; --surface:#fff; --raised:#fff; --hover:#f1f5f9;
+    --border:#e2e8f0; --border-strong:#cbd5e1;
+    --text:#0f172a; --text2:#475569; --text3:#64748b;
+    --primary:#2563eb; --primary-hover:#1d4ed8; --primary-subtle:#eff4ff;
+    --success:#12b76a; --success-text:#027a48; --success-subtle:#ecfdf3;
+    --warning:#f79009; --warning-text:#b54708; --warning-subtle:#fffaeb;
+    --danger:#f04438; --danger-text:#b42318; --danger-subtle:#fef3f2;
+    --info:#2e90fa; --info-text:#175cd3; --info-subtle:#eff8ff;
+    --radius:8px; --radius-lg:12px; --shadow:0 1px 3px rgba(15,23,42,.10),0 1px 2px rgba(15,23,42,.06);
+    --shadow-lg:0 12px 32px rgba(15,23,42,.14); --ring:0 0 0 3px rgba(37,99,235,.28);
+    --space:4px;
+  }
+  [data-theme="dark"]{
+    --bg:#0b1220; --surface:#111a2b; --raised:#16213a; --hover:#1b2740;
+    --border:#263449; --border-strong:#34465f;
+    --text:#e6edf7; --text2:#a9b7cc; --text3:#7e8da6;
+    --primary:#3b82f6; --primary-hover:#2563eb; --primary-subtle:#16213a;
+    --success:#32d583; --success-text:#75e0a7; --success-subtle:#0c2a1e;
+    --warning:#fdb022; --warning-text:#fec84b; --warning-subtle:#2a1f0a;
+    --danger:#f97066; --danger-text:#fda29b; --danger-subtle:#2d1210;
+    --info:#53b1fd; --info-text:#84caff; --info-subtle:#0d1f33;
+    --shadow:0 2px 6px rgba(0,0,0,.45); --shadow-lg:0 16px 40px rgba(0,0,0,.55);
+    --ring:0 0 0 3px rgba(138,180,255,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.55 "PingFang SC","Microsoft YaHei",Inter,system-ui,sans-serif}
+  button{font:inherit;cursor:pointer}
+  .muted{color:var(--text2)} .small{font-size:12px} .mono{font-family:"JetBrains Mono",Consolas,monospace}
+  .app{min-height:100vh;display:flex;flex-direction:column}
+  header.top{height:56px;display:flex;align-items:center;gap:12px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+  .brand{font-weight:600;display:flex;align-items:center;gap:8px}
+  .logo{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--primary),#7a5af8);display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700}
+  .grow{flex:1}
+  .btn{height:36px;padding:0 14px;border-radius:var(--radius);border:1px solid var(--border-strong);background:var(--surface);color:var(--text);display:inline-flex;align-items:center;gap:6px;transition:.15s}
+  .btn:hover{background:var(--hover)}
+  .btn:focus-visible{outline:none;box-shadow:var(--ring)}
+  .btn.primary{background:var(--primary);border-color:transparent;color:#fff;font-weight:500}
+  .btn.primary:hover{background:var(--primary-hover)}
+  .btn.ghost{border-color:transparent;background:transparent;color:var(--text2)}
+  .btn.danger{background:var(--danger);border-color:transparent;color:#fff}
+  .btn.sm{height:30px;padding:0 10px;font-size:12px}
+  .btn[disabled]{opacity:.55;cursor:not-allowed}
+  .badge{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:999px;font-size:12px;background:var(--hover);color:var(--text2)}
+  .badge.ok{background:var(--success-subtle);color:var(--success-text)}
+  .badge.warn{background:var(--warning-subtle);color:var(--warning-text)}
+  .badge.err{background:var(--danger-subtle);color:var(--danger-text)}
+  .badge.info{background:var(--info-subtle);color:var(--info-text)}
+  .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+  main{flex:1;width:100%;max-width:1280px;margin:0 auto;padding:24px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow)}
+  .pad{padding:20px}
+  h1{font-size:24px;line-height:1.3;margin:0 0 4px;font-weight:600}
+  h2{font-size:18px;margin:0 0 8px;font-weight:600}
+  h3{font-size:14px;margin:0 0 8px;font-weight:600}
+  .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .split{display:grid;grid-template-columns:2fr 1fr;gap:24px}
+  @media(max-width:900px){.split{grid-template-columns:1fr}}
+  .hidden{display:none !important}
+  .center{min-height:calc(100vh - 56px);display:grid;place-items:center;padding:24px}
+  .login-card{width:min(420px,100%)}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .field label{font-size:13px;font-weight:500}
+  input[type=text],select{height:38px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);color:var(--text);width:100%}
+  input:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:var(--ring)}
+  .progress{height:8px;border-radius:999px;background:var(--hover);overflow:hidden}
+  .progress > i{display:block;height:100%;width:0;background:var(--primary);transition:width .4s ease}
+  .steps{list-style:none;padding:0;margin:0 0 20px}
+  .steps li{display:flex;gap:10px;align-items:center;padding:7px 0;color:var(--text3)}
+  .steps li.done{color:var(--success-text)} .steps li.now{color:var(--text);font-weight:500}
+  .avatar{width:30px;height:30px;border-radius:50%;background:var(--primary-subtle);color:var(--primary);display:grid;place-items:center;font-size:12px;font-weight:600}
+  .ws-card{display:flex;flex-direction:column;gap:10px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+  .kpi b{font-size:20px;display:block}
+  .list{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+  .list .item{display:grid;grid-template-columns:1fr 130px 90px 40px;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface)}
+  .list .item:last-child{border-bottom:0}
+  .list .item:hover{background:var(--hover)}
+  .list .head{background:var(--bg);font-size:12px;color:var(--text3)}
+  @media(max-width:760px){.list .item{grid-template-columns:1fr 90px}.list .item > :nth-child(3){display:none}.list .head{display:none}}
+  .toast-wrap{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:50}
+  .toast{background:var(--raised);border:1px solid var(--border);border-left:3px solid var(--success);border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:12px 14px;min-width:260px;max-width:360px}
+  .toast.err{border-left-color:var(--danger)}
+  .toast.info{border-left-color:var(--info)}
+  .alert{border:1px solid var(--border);border-left:3px solid var(--warning);background:var(--warning-subtle);color:var(--warning-text);border-radius:var(--radius);padding:10px 12px;font-size:13px}
+  .alert.err{border-left-color:var(--danger);background:var(--danger-subtle);color:var(--danger-text)}
+  .alert.ok{border-left-color:var(--success);background:var(--success-subtle);color:var(--success-text)}
+  .modal-mask{position:fixed;inset:0;background:rgba(15,23,42,.45);display:grid;place-items:center;padding:20px;z-index:40}
+  .modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:var(--raised);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg)}
+  .modal header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+  .modal .body{padding:20px}
+  .modal footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--border)}
+  .radio{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;cursor:pointer}
+  .radio:has(input:checked){border-color:var(--primary);background:var(--primary-subtle)}
+  .radio input{margin-top:2px}
+  .perm{display:grid;grid-template-columns:1fr 120px 50px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--border)}
+  .perm:last-child{border-bottom:0}
+  .tag{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:4px;font-size:11px;background:var(--hover);color:var(--text2)}
+  .link{color:var(--primary);cursor:pointer;text-decoration:none;background:none;border:0;padding:0}
+  .link:hover{text-decoration:underline}
+  .footer{padding:20px;color:var(--text3);font-size:12px;text-align:center}
+  .skeleton{height:12px;border-radius:4px;background:var(--hover);animation:pulse 1.2s infinite}
+  @keyframes pulse{50%{opacity:.5}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  .skip{position:absolute;left:-9999px}
+  .skip:focus{left:8px;top:8px;z-index:100;background:var(--surface);padding:8px;border-radius:6px}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到主内容</a>
+<div class="app">
+  <header class="top">
+    <div class="brand"><span class="logo" aria-hidden="true">OC</span> OpenDream Cloud</div>
+    <span class="badge info" title="当前组织">星云科技</span>
+    <div class="grow"></div>
+    <button class="btn ghost sm" id="themeBtn" aria-label="切换明暗主题">🌙 暗色</button>
+    <div class="avatar" title="李雷（开发者）">李</div>
+  </header>
+  <main id="main" aria-live="polite"></main>
+</div>
+<div class="toast-wrap" id="toasts" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+  var state = { theme:"light", screen:"login", progress:0, timer:null, error:false };
+  var app = document.getElementById("main");
+  var $ = function(s,r){ return (r||document).querySelector(s); };
+  function h(html){ return html; }
+  function toast(msg, type){
+    var el = document.createElement("div");
+    el.className = "toast " + (type||"ok");
+    el.innerHTML = "<div>" + msg + "</div>";
+    $("#toasts").appendChild(el);
+    setTimeout(function(){ el.remove(); }, type==="err"?8000:4000);
+  }
+  function go(screen){ state.screen = screen; render(); window.scrollTo(0,0); }
+  function setTheme(t){
+    state.theme = t;
+    document.documentElement.setAttribute("data-theme", t);
+    $("#themeBtn").textContent = t==="dark" ? "☀️ 亮色" : "🌙 暗色";
+  }
+  $("#themeBtn").addEventListener("click", function(){ setTheme(state.theme==="dark"?"light":"dark"); });
+
+  var screens = {};
+
+  screens.login = function(){
+    return h('\
+    <div class="center"><div class="card login-card pad">\
+      <h1>登录 OpenDream Cloud</h1>\
+      <p class="muted small">使用企业账号继续；登录后将自动获得 4C8G 云端工作区。</p>\
+      <div class="field" style="margin-top:16px">\
+        <button class="btn primary" id="ssoBtn" style="justify-content:center;height:44px">使用企业账号登录（SSO）</button>\
+      </div>\
+      <div class="row" style="justify-content:center;margin:8px 0"><span class="small muted">或</span></div>\
+      <button class="btn" style="width:100%;justify-content:center" onclick="alert(\'CLI/SDK 使用 ock_ API Key 登录（原型略）\')">使用 API Key 登录（CLI/SDK）</button>\
+      <p class="small muted" style="margin-top:14px">登录即表示同意《服务条款》《隐私政策》。关闭浏览器不会销毁工作区。</p>\
+    </div></div>');
+  };
+  screens.provisioning = function(){
+    var pct = state.progress;
+    var stage = pct<25?"分配资源":pct<55?"拉取镜像":pct<85?"启动引擎":"就绪";
+    if (state.error){
+      return h('\
+      <div class="center"><div class="card pad" style="width:min(640px,100%)">\
+        <span class="badge err"><i class="dot"></i> 创建失败</span>\
+        <h1 style="margin-top:12px">工作区创建失败</h1>\
+        <p class="muted">集群资源紧张（diagnostic: wsd-7f3a-91c2）。可以重试，或复制诊断 ID 联系管理员。</p>\
+        <div class="alert err" style="margin:14px 0">可能原因：4C8G 资源暂时不足。重试不会重复扣减配额。</div>\
+        <div class="row">\
+          <button class="btn primary" id="retryBtn">重试创建</button>\
+          <button class="btn" id="diagBtn">复制诊断 ID</button>\
+          <button class="btn ghost" id="skipErr">稍后继续</button>\
+        </div>\
+      </div></div>');
+    }
+    return h('\
+    <div class="center"><div class="card pad" style="width:min(680px,100%)">\
+      <h1>正在为你准备云端工作区</h1>\
+      <p class="muted small">4C8G · 独立存储 · 预计还需 ' + Math.max(0, 90-Math.round(pct)) + ' 秒。可以离开，完成后会通知你。</p>\
+      <ul class="steps">\
+        <li class="done">✓ 账号已就绪 <span class="muted small">星云科技 · 开发者</span></li>\
+        <li class="'+(pct<100?"now":"done")+'">'+(pct<100?"●":"✓")+' 正在创建工作区 <span class="muted small">'+stage+'</span></li>\
+        <li class="'+(pct>=100?"now":"")+'">'+(pct>=100?"●":"○")+' 进入工作区</li>\
+      </ul>\
+      <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'"><i style="width:'+pct+'%"></i></div>\
+      <div class="row" style="margin-top:8px;justify-content:space-between"><span class="small muted">'+pct+'%</span><span class="small muted">已用 '+(Math.round(pct*1.3))+' 秒</span></div>\
+      <div class="row" style="margin-top:22px">\
+        <button class="btn primary" id="goWs" '+(pct<100?"disabled":"")+'>'+(pct<100?"创建中…":"进入工作区")+'</button>\
+        <button class="btn" id="fakeErr" '+(pct<100?"":"disabled")+'>模拟拉起失败</button>\
+        <button class="btn ghost" id="laterBtn">稍后继续</button>\
+      </div>\
+      <p class="small muted" style="margin-top:14px">等待时可以：<button class="link" onclick="alert(\'原型：跳转 Skill 中心（略）\')">浏览 Skill 中心</button> · <button class="link" onclick="alert(\'原型：查看可用模型（略）\')">查看可用模型</button></p>\
+    </div></div>');
+  };
+
+  screens.workspaces = function(){
+    return h('\
+    <div class="row" style="justify-content:space-between;margin-bottom:4px">\
+      <div><h1>工作区</h1><p class="muted small" style="margin:0">你的云端 opencode 工作区；关闭浏览器不会销毁，下次回来继续。</p></div>\
+      <button class="btn primary" onclick="alert(\'原型：多开需配额，P2\')">+ 新建工作区</button>\
+    </div>\
+    <div class="card pad" style="margin-top:16px">\
+      <div class="row" style="justify-content:space-between">\
+        <div class="row"><span class="badge ok"><i class="dot"></i> 就绪</span><strong>oc-7f3a · 支付重构</strong><span class="mono small muted">4C8G · PVC 20Gi</span></div>\
+        <div class="row"><button class="btn" id="wsDetail">详情</button><button class="btn primary" id="enterWs">打开工作区 ↗</button></div>\
+      </div>\
+      <p class="small muted" style="margin:10px 0 0">最近活动 2 分钟前 · 已装 Skill 4 · 已绑 MCP 2 · 上次会话「修复登录超时」</p>\
+      <div class="row" style="margin-top:12px">\
+        <span class="tag">idle = 就绪子态（资源常驻）</span><span class="tag">退出不销毁</span><span class="tag">按需休眠（默认关）</span>\
+        <button class="btn sm ghost" id="shareFromWs">创建应用并分享…</button>\
+      </div>\
+    </div>\
+    <div class="row" style="margin-top:16px;gap:12px">\
+      <div class="card pad grow" style="min-width:240px"><span class="badge"><i class="dot"></i> 空闲</span><h3 style="margin:8px 0 2px">oc-9c21 · 数据分析</h3><p class="small muted" style="margin:0">最近活动 3 小时前 · 可直接进入</p><button class="btn sm" style="margin-top:10px" onclick="alert(\'原型：直接进入，无需唤醒\')">进入</button></div>\
+      <div class="card pad grow" style="min-width:240px"><span class="badge warn"><i class="dot"></i> 已休眠</span><h3 style="margin:8px 0 2px">oc-1a02 · 周报助手</h3><p class="small muted" style="margin:0">PVC 保留 · 唤醒约 20 秒</p><button class="btn sm" style="margin-top:10px" onclick="toast(\'正在唤醒（原型模拟）\',\'info\')">唤醒并打开</button></div>\
+      <div class="card pad grow" style="min-width:240px;border-style:dashed"><span class="badge info">配额 1/1</span><h3 style="margin:8px 0 2px">需要更多工作区？</h3><p class="small muted" style="margin:0">当前配额 1/1，可申请提升。</p><button class="btn sm" style="margin-top:10px" onclick="alert(\'原型：配额申请（略）\')">申请提升</button></div>\
+    </div>');
+  };
+
+  screens.workspaceDetail = function(){
+    return h('\
+    <div class="row" style="justify-content:space-between;margin-bottom:12px">\
+      <div class="row"><button class="btn ghost sm" id="backList">← 工作区</button><span class="badge ok"><i class="dot"></i> 就绪（idle）</span><strong>oc-7f3a · 支付重构</strong></div>\
+      <div class="row"><button class="btn" onclick="alert(\'原型：工作区设置（销毁/快照/休眠）\')">设置</button><button class="btn primary" id="openWs">打开工作区 ↗</button></div>\
+    </div>\
+    <div class="split">\
+      <div class="card pad">\
+        <h2>状态</h2>\
+        <p class="muted small">新标签页直达 opencode Web GUI（access-ticket 一次性 60s）；控制台不复制 opencode UI。</p>\
+        <div class="kpis" style="grid-template-columns:repeat(3,1fr)">\
+          <div class="kpi"><span class="small muted">规格</span><b>4C8G</b></div>\
+          <div class="kpi"><span class="small muted">最近活动</span><b>2 分钟</b></div>\
+          <div class="kpi"><span class="small muted">状态</span><b style="color:var(--success-text)">就绪</b></div>\
+        </div>\
+        <h3 style="margin-top:20px">事件时间线</h3>\
+        <div class="list"><div class="item"><span>09:12 workspace.ready · 配置下发完成</span><span class="muted small">2 小时前</span><span></span><span></span></div>\
+        <div class="item"><span>09:10 workspace.starting · 运行时启动</span><span class="muted small">2 小时前</span><span></span><span></span></div></div>\
+      </div>\
+      <div class="card pad">\
+        <h2>最近会话</h2>\
+        <p class="small muted">修复登录超时 · 2 小时前</p>\
+        <button class="btn" style="width:100%;justify-content:center" id="openWs2">继续上次会话 ↗</button>\
+        <hr style="border:0;border-top:1px solid var(--border);margin:18px 0">\
+        <h3>快捷入口</h3>\
+        <div class="row">\
+          <button class="btn sm" id="shareBtn">分享应用</button>\
+          <button class="btn sm" onclick="alert(\'原型：快照创建（略）\')">创建快照</button>\
+        </div>\
+        <p class="small muted" style="margin-top:14px">离开页面不会销毁工作区；销毁需二次确认 + 24h 冷却撤销。</p>\
+      </div>\
+    </div>');
+  };
+
+  var shareState = { audience:"org" };
+  function shareModal(){
+    var isUsers = shareState.audience==="users";
+    var preview = shareState.audience==="org" ? "组织内 218 人可访问" : shareState.audience==="public" ? "平台内已登录用户可发现（含其他租户，需 SSO）" : shareState.audience==="private" ? "仅你与服务端 owner 可访问" : "指定成员 3（1 组）可访问";
+    return h('\
+    <div class="modal-mask" id="mask">\
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="shareTitle">\
+        <header><h2 id="shareTitle" style="margin:0">分享「发票助手」</h2><button class="btn ghost sm" id="closeShare" aria-label="关闭">✕</button></header>\
+        <div class="body">\
+          <div class="row" style="justify-content:space-between;background:var(--hover);padding:10px 12px;border-radius:8px">\
+            <span class="mono small">cloud.example.com/a/invoice-helper</span>\
+            <button class="btn sm" id="copyLink">复制链接</button>\
+          </div>\
+          <h3 style="margin-top:18px">访问范围</h3>\
+          <label class="radio"><input type="radio" name="aud" value="private" '+(shareState.audience==="private"?"checked":"")+'><span><strong>仅自己</strong><br><span class="small muted">默认，不产生分享记录</span></span></label>\
+          <label class="radio"><input type="radio" name="aud" value="org" '+(shareState.audience==="org"?"checked":"")+'><span><strong>组织内（需登录）</strong><br><span class="small muted">本组织成员可访问；仍需 SSO</span></span></label>\
+          <label class="radio"><input type="radio" name="aud" value="users" '+(shareState.audience==="users"?"checked":"")+'><span><strong>指定用户/团队</strong><br><span class="small muted">白名单 + 查看/使用/编辑角色</span></span></label>\
+          <label class="radio"><input type="radio" name="aud" value="public" '+(shareState.audience==="public"?"checked":"")+'><span><strong>平台内公开</strong><br><span class="small muted">平台内已登录用户（含其他租户）可发现；匿名互联网访问禁止</span></span></label>\
+          <div class="alert" style="margin:10px 0 0">所有范围都要求 SSO；不存在"免登录公开链接"。</div>\
+          <div class="'+(isUsers?"":"hidden")+'" id="grants">\
+            <h3 style="margin-top:18px">成员与权限</h3>\
+            <div class="perm"><span>张伟 · 团队负责人</span><select class="roleSel" aria-label="张伟角色"><option>使用 use</option><option>查看 view</option><option>编辑 edit</option></select><button class="link" onclick="this.closest(\'.perm\').remove()">移除</button></div>\
+            <div class="perm"><span>李雷 · 开发者</span><select class="roleSel" aria-label="李雷角色"><option>查看 view</option><option>使用 use</option><option>编辑 edit</option></select><button class="link" onclick="this.closest(\'.perm\').remove()">移除</button></div>\
+            <div class="perm"><span>产品设计组 · 团队</span><select class="roleSel" aria-label="产品设计组角色"><option>编辑 edit</option><option>使用 use</option><option>查看 view</option></select><button class="link" onclick="this.closest(\'.perm\').remove()">移除</button></div>\
+            <button class="btn sm" style="margin-top:10px" onclick="toast(\'原型：打开成员搜索\',\'info\')">+ 添加成员</button>\
+          </div>\
+          <p class="small muted" style="margin-top:16px">权限预览：<strong id="preview">'+preview+'</strong> · 保存后 ≤5s 生效</p>\
+          <div class="row" style="margin-top:8px"><label class="small muted">链接失效时间</label><select id="expire" style="width:auto"><option>永不</option><option>24 小时</option><option>7 天</option><option>30 天</option></select>\
+          <label class="small muted" style="margin-left:12px"><input type="checkbox" id="dl"> 允许下载产物</label></div>\
+        </div>\
+        <footer><button class="btn" id="cancelShare">取消</button><button class="btn primary" id="saveShare">保存并生效</button></footer>\
+      </div>\
+    </div>');
+  }
+
+  function render(){
+    app.innerHTML = (screens[state.screen] || screens.login)();
+    if (state.screen==="login"){
+      $("#ssoBtn").addEventListener("click", startProvision);
+    }
+    if (state.screen==="provisioning"){
+      if (state.error){
+        $("#retryBtn").addEventListener("click", function(){ state.error=false; startProvision(); });
+        $("#diagBtn").addEventListener("click", function(){ toast("已复制诊断 ID：wsd-7f3a-91c2","info"); });
+        $("#skipErr").addEventListener("click", function(){ go("workspaces"); });
+      } else {
+        $("#laterBtn").addEventListener("click", function(){ go("workspaces"); });
+        $("#fakeErr").addEventListener("click", function(){ state.error=true; render(); });
+        $("#goWs").addEventListener("click", function(){ go("workspaces"); });
+      }
+    }
+    if (state.screen==="workspaces"){
+      $("#enterWs").addEventListener("click", enterWorkspace);
+      $("#wsDetail").addEventListener("click", function(){ go("workspaceDetail"); });
+      $("#shareFromWs").addEventListener("click", function(){ toast("原型：从工作区创建应用（略），直接演示分享面板","info"); setTimeout(openShare, 400); });
+    }
+    if (state.screen==="workspaceDetail"){
+      $("#backList").addEventListener("click", function(){ go("workspaces"); });
+      $("#openWs").addEventListener("click", enterWorkspace);
+      $("#openWs2").addEventListener("click", enterWorkspace);
+      $("#shareBtn").addEventListener("click", openShare);
+    }
+    bindShareModal();
+  }
+
+  function enterWorkspace(){
+    toast("已换取一次性 ticket，正在新标签页打开 opencode…（原型模拟）","info");
+    setTimeout(function(){
+      toast("工作区 GUI 已在新标签页打开；本页保留状态页。关闭浏览器不会销毁工作区。","ok");
+    }, 900);
+  }
+
+  function startProvision(){
+    state.progress = 0; state.error = false; go("provisioning");
+    if (state.timer) clearInterval(state.timer);
+    state.timer = setInterval(function(){
+      if (state.screen!=="provisioning" || state.error) return;
+      state.progress = Math.min(100, state.progress + 8 + Math.round(Math.random()*6));
+      render();
+      if (state.progress>=100){ clearInterval(state.timer); state.timer=null; }
+    }, 350);
+  }
+
+  function openShare(){
+    document.body.insertAdjacentHTML("beforeend", shareModal());
+    var mask = $("#mask");
+    mask.addEventListener("click", function(e){ if(e.target===mask) closeShare(); });
+    document.addEventListener("keydown", escClose);
+    var radios = document.querySelectorAll('input[name="aud"]');
+    Array.prototype.forEach.call(radios, function(r){
+      r.addEventListener("change", function(){
+        shareState.audience = r.value;
+        var isUsers = r.value==="users";
+        $("#grants").classList.toggle("hidden", !isUsers);
+        $("#preview").textContent = r.value==="org" ? "组织内 218 人可访问" : r.value==="public" ? "平台内已登录用户可发现（含其他租户，需 SSO）" : r.value==="private" ? "仅你与服务端 owner 可访问" : "指定成员 3（1 组）可访问";
+      });
+    });
+    $("#closeShare").addEventListener("click", closeShare);
+    $("#cancelShare").addEventListener("click", closeShare);
+    $("#copyLink").addEventListener("click", function(){ toast("已复制链接","ok"); });
+    $("#saveShare").addEventListener("click", function(){
+      toast("已保存，权限变更 5 秒内生效","ok");
+      closeShare();
+    });
+    $("#closeShare").focus();
+  }
+  function closeShare(){
+    if ($("#mask")) $("#mask").remove();
+    document.removeEventListener("keydown", escClose);
+  }
+  function escClose(e){ if(e.key==="Escape") closeShare(); }
+
+  // 初始化：主题跟随系统
+  setTheme(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  render();
+})();
+</script>
+</body>
+</html>

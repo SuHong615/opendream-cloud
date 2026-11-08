@@ -1,0 +1,12 @@
+# Build context: repo root
+FROM docker.m.daocloud.io/oven/bun:1.4.4
+WORKDIR /work
+COPY packages/contracts ./packages/contracts
+COPY services/harness ./services/harness
+WORKDIR /work/services/harness
+RUN bun install --production --registry https://registry.npmmirror.com
+ENV NODE_ENV=development HOST=0.0.0.0 PORT=4111
+EXPOSE 4111
+HEALTHCHECK --interval=10s --timeout=5s --retries=12 \
+  CMD bun -e "fetch('http://127.0.0.1:4111/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["bun", "src/server.ts"]

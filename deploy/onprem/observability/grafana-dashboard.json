@@ -1,0 +1,38 @@
+{
+  "uid": "opendream-overview",
+  "title": "OpenDream Cloud Overview",
+  "timezone": "browser",
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Control-plane RPS by status",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [{ "expr": "sum by (status) (rate(opendream_http_requests_total[5m]))", "legendFormat": "{{status}}" }]
+    },
+    {
+      "type": "stat",
+      "title": "Workspaces by state",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+      "targets": [{ "expr": "sum by (state) (opendream_workspaces)", "legendFormat": "{{state}}" }]
+    },
+    {
+      "type": "stat",
+      "title": "Outbox failed",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "targets": [{ "expr": "sum(opendream_outbox_events{status=\"failed\"})" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Outbox events by status",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [{ "expr": "opendream_outbox_events", "legendFormat": "{{status}}" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Model providers enabled",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [{ "expr": "opendream_model_providers_enabled" }]
+    }
+  ]
+}

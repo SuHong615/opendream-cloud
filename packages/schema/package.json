@@ -1,0 +1,25 @@
+{
+  "name": "@opendream-cloud/schema",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "OpenDream Cloud 公共 JSON Schema（workflow-v1 等）",
+  "files": [
+    "schemas",
+    "scripts",
+    "examples"
+  ],
+  "exports": {
+    "./workflow-v1": "./schemas/workflow-v1.json",
+    "./schemas/*": "./schemas/*"
+  },
+  "scripts": {
+    "validate": "node scripts/validate-workflow.mjs",
+    "test": "bun test"
+  },
+  "license": "Apache-2.0",
+  "author": "suhong",
+  "contributors": [
+    "suhong"
+  ]
+}

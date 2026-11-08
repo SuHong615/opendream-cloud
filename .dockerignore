@@ -1,0 +1,10 @@
+upstream/
+**/node_modules/
+node_modules/
+.git/
+.data/
+tools/
+test-results/
+docs/05-delivery/evidence/
+packages/shared/dist/
+apps/console/.next/

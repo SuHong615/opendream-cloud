@@ -1,0 +1,35 @@
+groups:
+  - name: opendream-control-plane
+    rules:
+      - alert: OpenDreamControlPlaneDown
+        expr: up{job="opendream-control-plane"} == 0
+        for: 5m
+        labels: { severity: critical, service: control-plane }
+        annotations:
+          summary: "OpenDream control-plane is down"
+          description: "control-plane 指标连续 5 分钟不可达"
+      - alert: OpenDreamHigh5xxRate
+        expr: sum(rate(opendream_http_requests_total{status=~"5.."}[5m])) / sum(rate(opendream_http_requests_total[5m])) > 0.05
+        for: 10m
+        labels: { severity: warning, service: control-plane }
+        annotations:
+          summary: "OpenDream 5xx rate > 5%"
+      - alert: OpenDreamOutboxFailed
+        expr: sum(opendream_outbox_events{status="failed"}) > 0
+        for: 5m
+        labels: { severity: warning, service: control-plane }
+        annotations:
+          summary: "Outbox has failed events"
+          description: "打开控制台 /outbox 查看并重放失败事件"
+      - alert: OpenDreamWorkspaceError
+        expr: sum(opendream_workspaces{state="error"}) > 0
+        for: 10m
+        labels: { severity: warning, service: workspace }
+        annotations:
+          summary: "Workspace in error state"
+      - alert: OpenDreamNoModelProvider
+        expr: opendream_model_providers_enabled == 0
+        for: 15m
+        labels: { severity: warning, service: model-center }
+        annotations:
+          summary: "No model provider enabled"
